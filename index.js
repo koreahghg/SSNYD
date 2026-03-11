@@ -69,10 +69,13 @@ function fetchMeal(dateStr, mealType) {
                     if (!json.mealServiceDietInfo) { resolve(null); return; }
                     const row  = json.mealServiceDietInfo[1].row[0];
                     const menu = row.DDISH_NM
-                        .replace(/<br\/>/g, '\n')       // 줄바꿈 처리
-                        .replace(/\s*\d+(\.\d+)*\s*/g, '') // 알레르기 번호 제거
-                        .trim();
-                    resolve(menu);
+                        .replace(/<br\/>/g, '\n')
+                        .trim()
+                        .split('\n')
+                        .map(item => `• ${item.trim()}`)
+                        .join('\n');
+                    const cal = row.CAL_INFO || '';
+                    resolve({ menu, cal });
                 } catch (e) { reject(e); }
             });
         }).on('error', reject);
@@ -108,9 +111,9 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
-        const menu = await fetchMeal(dateStr, mealType);
-        if (menu) {
-            message.reply(`🍽️ **${dayLabel} ${MEAL_LABELS[mealType]} 급식**\n\n${menu}`);
+        const result = await fetchMeal(dateStr, mealType);
+        if (result) {
+            message.reply(`🍽️ **${dayLabel} ${MEAL_LABELS[mealType]} 급식**\n\n${result.menu}\n\n${result.cal}`);
         } else {
             message.reply(`😢 ${dayLabel} ${MEAL_LABELS[mealType]} 급식 정보가 없습니다.`);
         }
