@@ -442,21 +442,43 @@ async function handleRouletteButton(interaction) {
 
     if (win) updateBalance(userId, amount * 2);
 
-    const delta      = win ? amount : -amount;
-    const updated    = getUser(userId, interaction.user.username);
-    const betLabel   = { odd: '홀', even: '짝', black: '⚫ 검', red: '🔴 빨' }[betType];
+    const delta    = win ? amount : -amount;
+    const updated  = getUser(userId, interaction.user.username);
+    const betLabel = { odd: '홀', even: '짝', black: '⚫ 검', red: '🔴 빨' }[betType];
 
-    const embed = new EmbedBuilder()
-        .setColor(win ? 0x22C55E : 0xEF4444)
-        .setTitle('🎡 룰렛')
-        .addFields(
-            { name: '베팅',      value: betLabel,                               inline: true  },
-            { name: '결과',      value: `${colorEmoji} **${result}**`,          inline: true  },
-            { name: '판정',      value: win ? '🎉 승리!' : '😔 패배',           inline: true  },
-            { name: '손익',      value: fmt(delta),                             inline: true  },
-            { name: '현재 잔액', value: `${updated.balance.toLocaleString()}원`, inline: true  }
-        );
-    interaction.update({ embeds: [embed], components: [] });
+    const numColor = n => n === 0 ? '🟢' : RED_NUMS.has(n) ? '🔴' : '⚫';
+    const spinLine = nums => nums.map(n => `${numColor(n)}**${n}**`).join('  ');
+
+    await interaction.deferUpdate();
+
+    // 빠른 구간 (200ms × 5)
+    const delays = [200, 200, 200, 200, 200, 350, 350, 500, 650, 850];
+    for (let i = 0; i < delays.length; i++) {
+        const shown = Array.from({ length: 5 }, () => Math.floor(Math.random() * 37));
+        await interaction.editReply({
+            embeds: [new EmbedBuilder()
+                .setColor(0x3B82F6)
+                .setTitle('🎡 룰렛')
+                .setDescription(`🎡  ${spinLine(shown)}  🎡`)
+                .setFooter({ text: '룰렛이 돌아가고 있습니다...' })],
+            components: []
+        });
+        await sleep(delays[i]);
+    }
+
+    // 최종 결과
+    await interaction.editReply({
+        embeds: [new EmbedBuilder()
+            .setColor(win ? 0x22C55E : 0xEF4444)
+            .setTitle('🎡 룰렛')
+            .setDescription(`> ${colorEmoji} **${result}** ${colorEmoji}`)
+            .addFields(
+                { name: '베팅',      value: betLabel,                                inline: true },
+                { name: '판정',      value: win ? '🎉 승리!' : '😔 패배',            inline: true },
+                { name: '손익',      value: fmt(delta),                              inline: true },
+                { name: '현재 잔액', value: `${updated.balance.toLocaleString()}원`, inline: true }
+            )]
+    });
 }
 
 async function handleButtonInteraction(interaction) {
