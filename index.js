@@ -58,10 +58,11 @@ function fetchMeal(dateStr, mealType) {
                     if (!json.mealServiceDietInfo) { resolve(null); return; }
                     const row  = json.mealServiceDietInfo[1].row[0];
                     const menu = row.DDISH_NM
-                        .replace(/<br\/>/g, '\n')
-                        .trim()
-                        .split('\n')
-                        .map(item => `• ${item.trim()}`)
+                        .replace(/\*/g, '')
+                        .split(/<br\/>/i)
+                        .map(item => item.trim())
+                        .filter(item => item)
+                        .map(item => `- ${item}`)
                         .join('\n');
                     const cal = row.CAL_INFO || '';
                     resolve({ menu, cal });
