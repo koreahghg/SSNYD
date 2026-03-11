@@ -19,7 +19,7 @@ console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 // ※ 나이스 오픈API 설정 (직접 입력하세요)
 const NEIS_API_KEY = process.env.NEIS_API_KEY || 'c11ea26f8c614f50bd7b19d2f3228e6d';  // 나이스 오픈API 인증키
 const ATPT_CODE    = 'F10';                // 광주광역시교육청 코드
-const SCHOOL_CODE  = '7380112';   // 광주소프트웨어마이스터고 학교코드 (나이스에서 확인)
+const SCHOOL_CODE  = '7380292';   // 광주소프트웨어마이스터고 학교코드 (나이스에서 확인)
 // ──────────────────────────────────────────────────
 
 const https = require('https');
