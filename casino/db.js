@@ -4,7 +4,10 @@ const path = require("path");
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "..", "casino_db.json");
 
 function load() {
-  if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, "{}", "utf8");
+  if (!fs.existsSync(DB_PATH)) {
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    fs.writeFileSync(DB_PATH, "{}", "utf8");
+  }
   return JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
 }
 
