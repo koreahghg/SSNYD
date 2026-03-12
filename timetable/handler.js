@@ -44,6 +44,7 @@ function fetchTimetable(dateStr, classNum) {
         res.on("end", () => {
           try {
             const json = JSON.parse(raw);
+            console.log("[timetable] API response:", JSON.stringify(json).slice(0, 300));
             if (!json.hisTimetable) {
               resolve(null);
               return;
