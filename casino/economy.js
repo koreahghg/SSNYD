@@ -33,7 +33,7 @@ async function handleAttendance(message) {
     .setColor(0x22c55e)
     .setTitle("📅 출석 완료!")
     .addFields(
-      { name: "보상", value: "+20,000원", inline: true },
+      { name: "보상", value: "+80,000원", inline: true },
       {
         name: "현재 잔액",
         value: `${updated.balance.toLocaleString()}원`,
@@ -98,7 +98,7 @@ async function handleSupport(message) {
     .setColor(0xf59e0b)
     .setTitle("🆘 지원금 지급")
     .addFields(
-      { name: "지원금", value: "+30,000원", inline: true },
+      { name: "지원금", value: "+3,000,000원", inline: true },
       {
         name: "현재 잔액",
         value: `${updated.balance.toLocaleString()}원`,
