@@ -21,7 +21,7 @@ async function handleAttendance(message) {
   const left = cooldownLeft(user.last_attendance, 24 * 60 * 60 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 출석할 수 있습니다.`);
 
-  await updateBalance(message.author.id, 80000);
+  await updateBalance(message.author.id, 5000);
   await setField(
     message.author.id,
     "last_attendance",
@@ -33,7 +33,7 @@ async function handleAttendance(message) {
     .setColor(0x22c55e)
     .setTitle("📅 출석 완료!")
     .addFields(
-      { name: "보상", value: "+80,000원", inline: true },
+      { name: "보상", value: "+5,000원", inline: true },
       {
         name: "현재 잔액",
         value: `${updated.balance.toLocaleString()}원`,
@@ -45,10 +45,10 @@ async function handleAttendance(message) {
 
 async function handleWork(message) {
   const user = await getUser(message.author.id, message.author.username);
-  const left = cooldownLeft(user.last_work, 10 * 1000);
+  const left = cooldownLeft(user.last_work, 30 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 다시 일할 수 있습니다.`);
 
-  const reward = Math.floor(Math.random() * 49901) + 100;
+  const reward = Math.floor(Math.random() * 991) + 10;
   //const reward = 400000; // 꼼수
   await updateBalance(message.author.id, reward);
   await setField(message.author.id, "last_work", toMysqlDatetime(new Date()));
@@ -82,11 +82,11 @@ async function handleSupport(message) {
   if (user.balance > 0)
     return message.reply("❌ 잔액이 0원일 때만 지원금을 받을 수 있습니다.");
 
-  const left = cooldownLeft(user.last_support, 60 * 60 * 1000);
+  const left = cooldownLeft(user.last_support, 2 * 60 * 60 * 1000);
   if (left)
     return message.reply(`⏳ **${left}** 후에 다시 신청할 수 있습니다.`);
 
-  await updateBalance(message.author.id, 130000);
+  await updateBalance(message.author.id, 10000);
   await setField(
     message.author.id,
     "last_support",
@@ -98,7 +98,7 @@ async function handleSupport(message) {
     .setColor(0xf59e0b)
     .setTitle("🆘 지원금 지급")
     .addFields(
-      { name: "지원금", value: "+130,000원", inline: true },
+      { name: "지원금", value: "+10,000원", inline: true },
       {
         name: "현재 잔액",
         value: `${updated.balance.toLocaleString()}원`,
