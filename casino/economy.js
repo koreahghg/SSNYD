@@ -21,7 +21,7 @@ async function handleAttendance(message) {
   const left = cooldownLeft(user.last_attendance, 24 * 60 * 60 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 출석할 수 있습니다.`);
 
-  await updateBalance(message.author.id, 20000);
+  await updateBalance(message.author.id, 80000);
   await setField(
     message.author.id,
     "last_attendance",
@@ -86,7 +86,7 @@ async function handleSupport(message) {
   if (left)
     return message.reply(`⏳ **${left}** 후에 다시 신청할 수 있습니다.`);
 
-  await updateBalance(message.author.id, 30000);
+  await updateBalance(message.author.id, 130000);
   await setField(
     message.author.id,
     "last_support",
@@ -98,7 +98,7 @@ async function handleSupport(message) {
     .setColor(0xf59e0b)
     .setTitle("🆘 지원금 지급")
     .addFields(
-      { name: "지원금", value: "+3,000,000원", inline: true },
+      { name: "지원금", value: "+130,000원", inline: true },
       {
         name: "현재 잔액",
         value: `${updated.balance.toLocaleString()}원`,
