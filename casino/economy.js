@@ -13,13 +13,13 @@ function cooldownLeft(lastTime, ms) {
 }
 
 async function handleAttendance(message) {
-  const user = getUser(message.author.id, message.author.username);
+  const user = await getUser(message.author.id, message.author.username);
   const left = cooldownLeft(user.last_attendance, 24 * 60 * 60 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 출석할 수 있습니다.`);
 
-  updateBalance(message.author.id, 20000);
-  setField(message.author.id, "last_attendance", new Date().toISOString());
-  const updated = getUser(message.author.id, message.author.username);
+  await updateBalance(message.author.id, 20000);
+  await setField(message.author.id, "last_attendance", new Date().toISOString());
+  const updated = await getUser(message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
     .setColor(0x22c55e)
@@ -36,14 +36,14 @@ async function handleAttendance(message) {
 }
 
 async function handleWork(message) {
-  const user = getUser(message.author.id, message.author.username);
+  const user = await getUser(message.author.id, message.author.username);
   const left = cooldownLeft(user.last_work, 90 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 다시 일할 수 있습니다.`);
 
   const reward = Math.floor(Math.random() * 4001) + 1000;
-  updateBalance(message.author.id, reward);
-  setField(message.author.id, "last_work", new Date().toISOString());
-  const updated = getUser(message.author.id, message.author.username);
+  await updateBalance(message.author.id, reward);
+  await setField(message.author.id, "last_work", new Date().toISOString());
+  const updated = await getUser(message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
     .setColor(0x3b82f6)
@@ -60,7 +60,7 @@ async function handleWork(message) {
 }
 
 async function handleBalance(message) {
-  const user = getUser(message.author.id, message.author.username);
+  const user = await getUser(message.author.id, message.author.username);
   const embed = new EmbedBuilder()
     .setColor(0x3b82f6)
     .setTitle(`💰 ${message.author.username}의 잔액`)
@@ -69,7 +69,7 @@ async function handleBalance(message) {
 }
 
 async function handleSupport(message) {
-  const user = getUser(message.author.id, message.author.username);
+  const user = await getUser(message.author.id, message.author.username);
   if (user.balance > 0)
     return message.reply("❌ 잔액이 0원일 때만 지원금을 받을 수 있습니다.");
 
@@ -77,9 +77,9 @@ async function handleSupport(message) {
   if (left)
     return message.reply(`⏳ **${left}** 후에 다시 신청할 수 있습니다.`);
 
-  updateBalance(message.author.id, 30000);
-  setField(message.author.id, "last_support", new Date().toISOString());
-  const updated = getUser(message.author.id, message.author.username);
+  await updateBalance(message.author.id, 30000);
+  await setField(message.author.id, "last_support", new Date().toISOString());
+  const updated = await getUser(message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
     .setColor(0xf59e0b)
@@ -96,7 +96,7 @@ async function handleSupport(message) {
 }
 
 async function handleRanking(message) {
-  const users = getTopUsers(10);
+  const users = await getTopUsers(10);
   const medals = ["🥇", "🥈", "🥉"];
   const list = users
     .map(

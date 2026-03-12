@@ -2,6 +2,7 @@ const { Client, Events, GatewayIntentBits } = require("discord.js");
 const { handleCasino, handleButtonInteraction } = require("./casino/handler");
 const { handleMeal } = require("./meal/handler");
 const { handleScheduler, initScheduler } = require("./scheduler/handler");
+const { init: initDb } = require("./casino/db");
 
 const token = process.env.DISCORD_TOKEN;
 const client = new Client({
@@ -12,8 +13,9 @@ const client = new Client({
   ],
 });
 
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+  await initDb();
   initScheduler();
 });
 

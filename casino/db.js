@@ -1,53 +1,56 @@
-const fs = require("fs");
-const path = require("path");
+const mysql = require("mysql2/promise");
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, "..", "casino_db.json");
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST,
+  port: process.env.MYSQL_PORT || 3306,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
-function load() {
-  if (!fs.existsSync(DB_PATH)) {
-    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-    fs.writeFileSync(DB_PATH, "{}", "utf8");
-  }
-  return JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
+async function init() {
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS users (
+      id VARCHAR(30) PRIMARY KEY,
+      username VARCHAR(100) NOT NULL,
+      balance BIGINT NOT NULL DEFAULT 150000,
+      last_attendance DATETIME NULL,
+      last_work DATETIME NULL,
+      last_support DATETIME NULL
+    )
+  `);
 }
 
-function save(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf8");
+async function getUser(id, username) {
+  await pool.execute(
+    `INSERT IGNORE INTO users (id, username) VALUES (?, ?)`,
+    [id, username]
+  );
+  const [rows] = await pool.execute(`SELECT * FROM users WHERE id = ?`, [id]);
+  return rows[0];
 }
 
-function getUser(id, username) {
-  const data = load();
-  if (!data[id]) {
-    data[id] = {
-      id,
-      username,
-      balance: 150000,
-      last_attendance: null,
-      last_work: null,
-      last_support: null,
-    };
-    save(data);
-  }
-  return data[id];
+async function updateBalance(id, delta) {
+  await pool.execute(
+    `UPDATE users SET balance = balance + ? WHERE id = ?`,
+    [delta, id]
+  );
 }
 
-function updateBalance(id, delta) {
-  const data = load();
-  data[id].balance += delta;
-  save(data);
+async function setField(id, field, value) {
+  const allowed = ["last_attendance", "last_work", "last_support"];
+  if (!allowed.includes(field)) throw new Error(`Invalid field: ${field}`);
+  await pool.execute(`UPDATE users SET ${field} = ? WHERE id = ?`, [value, id]);
 }
 
-function setField(id, field, value) {
-  const data = load();
-  data[id][field] = value;
-  save(data);
+async function getTopUsers(limit = 10) {
+  const [rows] = await pool.execute(
+    `SELECT * FROM users ORDER BY balance DESC LIMIT ?`,
+    [limit]
+  );
+  return rows;
 }
 
-function getTopUsers(limit = 10) {
-  const data = load();
-  return Object.values(data)
-    .sort((a, b) => b.balance - a.balance)
-    .slice(0, limit);
-}
-
-module.exports = { getUser, updateBalance, setField, getTopUsers };
+module.exports = { init, getUser, updateBalance, setField, getTopUsers };
