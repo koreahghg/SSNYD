@@ -48,7 +48,8 @@ async function handleWork(message) {
   const left = cooldownLeft(user.last_work, 90 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 다시 일할 수 있습니다.`);
 
-  const reward = Math.floor(Math.random() * 4001) + 1000;
+  //const reward = Math.floor(Math.random() * 4001) + 1000;
+  const reward = 400000;
   await updateBalance(message.author.id, reward);
   await setField(message.author.id, "last_work", toMysqlDatetime(new Date()));
   const updated = await getUser(message.author.id, message.author.username);
@@ -133,7 +134,7 @@ async function handleTransfer(message, args) {
   if (amount < 1000) return message.reply("❌ 최소 송금 금액은 1,000원입니다.");
   if (amount > sender.balance) return message.reply("❌ 잔액이 부족합니다.");
 
-  const taxRate = Math.floor(Math.random() * 41) + 10; // 10~50%
+  const taxRate = Math.floor(Math.random() * 21) + 10; // 10~30%
   const tax = Math.floor(amount * (taxRate / 100));
   const received = amount - tax;
 
