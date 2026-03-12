@@ -125,6 +125,11 @@ function buildBjRow(userId) {
 }
 
 const bjGames = new Map();
+const activeGamblers = new Set();
+
+function isGambling(userId) {
+  return activeGamblers.has(userId);
+}
 
 async function handleBlackjack(message, args) {
   if (bjGames.has(message.author.id))
@@ -180,6 +185,7 @@ async function handleBlackjack(message, args) {
   }
 
   bjGames.set(message.author.id, { deck, player, dealer, bet: amount });
+  activeGamblers.add(message.author.id);
 
   const embed = new EmbedBuilder()
     .setColor(0x3b82f6)
@@ -215,6 +221,7 @@ async function handleBjButton(interaction) {
 
     if (val > 21) {
       bjGames.delete(userId);
+      activeGamblers.delete(userId);
       const updated = await getUser(userId, interaction.user.username);
       const embed = new EmbedBuilder()
         .setColor(0xef4444)
@@ -261,6 +268,7 @@ async function handleBjButton(interaction) {
 
   if (action === "stand") {
     bjGames.delete(userId);
+    activeGamblers.delete(userId);
     while (bjHandVal(game.dealer) < 17) game.dealer.push(game.deck.pop());
 
     const pVal = bjHandVal(game.player);
@@ -384,6 +392,7 @@ async function handleBaccarat(message, args) {
     .setDescription(
       `베팅 금액: **${amount.toLocaleString()}원**\n어디에 베팅할까요?`,
     );
+  activeGamblers.add(message.author.id);
   message.reply({ embeds: [embed], components: [row] });
 }
 
@@ -400,7 +409,8 @@ async function handleBaccaratButton(interaction) {
     });
 
   const user = await getUser(userId, interaction.user.username);
-  if (user.balance < amount)
+  if (user.balance < amount) {
+    activeGamblers.delete(userId);
     return interaction.update({
       embeds: [
         new EmbedBuilder()
@@ -410,6 +420,7 @@ async function handleBaccaratButton(interaction) {
       ],
       components: [],
     });
+  }
 
   await updateBalance(userId, -amount);
   const { player, banker, pVal, bVal, winner } = runBaccarat();
@@ -563,6 +574,7 @@ async function handleBaccaratButton(interaction) {
         ),
     ],
   });
+  activeGamblers.delete(userId);
 }
 
 // ─── ROULETTE ────────────────────────────────────────────────────────────────
@@ -708,4 +720,5 @@ module.exports = {
   handleBaccarat,
   handleRoulette,
   handleButtonInteraction,
+  isGambling,
 };

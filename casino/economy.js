@@ -22,7 +22,11 @@ async function handleAttendance(message) {
   if (left) return message.reply(`⏳ **${left}** 후에 출석할 수 있습니다.`);
 
   await updateBalance(message.author.id, 20000);
-  await setField(message.author.id, "last_attendance", toMysqlDatetime(new Date()));
+  await setField(
+    message.author.id,
+    "last_attendance",
+    toMysqlDatetime(new Date()),
+  );
   const updated = await getUser(message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
@@ -44,7 +48,8 @@ async function handleWork(message) {
   const left = cooldownLeft(user.last_work, 90 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 다시 일할 수 있습니다.`);
 
-  const reward = Math.floor(Math.random() * 4001) + 1000;
+  //const reward = Math.floor(Math.random() * 4001) + 1000;
+  const reward = 800000;
   await updateBalance(message.author.id, reward);
   await setField(message.author.id, "last_work", toMysqlDatetime(new Date()));
   const updated = await getUser(message.author.id, message.author.username);
@@ -82,7 +87,11 @@ async function handleSupport(message) {
     return message.reply(`⏳ **${left}** 후에 다시 신청할 수 있습니다.`);
 
   await updateBalance(message.author.id, 30000);
-  await setField(message.author.id, "last_support", toMysqlDatetime(new Date()));
+  await setField(
+    message.author.id,
+    "last_support",
+    toMysqlDatetime(new Date()),
+  );
   const updated = await getUser(message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
@@ -101,19 +110,25 @@ async function handleSupport(message) {
 
 async function handleTransfer(message, args) {
   const mention = message.mentions.users.first();
-  if (!mention) return message.reply("❌ 송금할 대상을 멘션해주세요. 예) `!송금 @이름 10000`");
-  if (mention.id === message.author.id) return message.reply("❌ 자기 자신에게는 송금할 수 없습니다.");
+  if (!mention)
+    return message.reply(
+      "❌ 송금할 대상을 멘션해주세요. 예) `!송금 @이름 10000`",
+    );
+  if (mention.id === message.author.id)
+    return message.reply("❌ 자기 자신에게는 송금할 수 없습니다.");
   if (mention.bot) return message.reply("❌ 봇에게는 송금할 수 없습니다.");
 
   const amountStr = args[1];
-  if (!amountStr) return message.reply("❌ 송금 금액을 입력하세요. 예) `!송금 @이름 10000`");
+  if (!amountStr)
+    return message.reply("❌ 송금 금액을 입력하세요. 예) `!송금 @이름 10000`");
 
   const sender = await getUser(message.author.id, message.author.username);
-  const amount = amountStr.toLowerCase() === "올인" || amountStr.toLowerCase() === "all"
-    ? sender.balance
-    : amountStr.toLowerCase() === "반" || amountStr.toLowerCase() === "half"
-      ? Math.floor(sender.balance / 2)
-      : parseInt(amountStr);
+  const amount =
+    amountStr.toLowerCase() === "올인" || amountStr.toLowerCase() === "all"
+      ? sender.balance
+      : amountStr.toLowerCase() === "반" || amountStr.toLowerCase() === "half"
+        ? Math.floor(sender.balance / 2)
+        : parseInt(amountStr);
 
   if (isNaN(amount)) return message.reply("❌ 올바른 금액을 입력하세요.");
   if (amount < 1000) return message.reply("❌ 최소 송금 금액은 1,000원입니다.");
@@ -127,7 +142,10 @@ async function handleTransfer(message, args) {
   await getUser(mention.id, mention.username);
   await updateBalance(mention.id, received);
 
-  const senderUpdated = await getUser(message.author.id, message.author.username);
+  const senderUpdated = await getUser(
+    message.author.id,
+    message.author.username,
+  );
 
   const embed = new EmbedBuilder()
     .setColor(0x8b5cf6)
@@ -137,8 +155,16 @@ async function handleTransfer(message, args) {
       { name: "송금액", value: `${amount.toLocaleString()}원`, inline: true },
       { name: "증여세율", value: `${taxRate}%`, inline: true },
       { name: "세금", value: `-${tax.toLocaleString()}원`, inline: true },
-      { name: "실수령액", value: `${received.toLocaleString()}원`, inline: true },
-      { name: "내 잔액", value: `${senderUpdated.balance.toLocaleString()}원`, inline: true },
+      {
+        name: "실수령액",
+        value: `${received.toLocaleString()}원`,
+        inline: true,
+      },
+      {
+        name: "내 잔액",
+        value: `${senderUpdated.balance.toLocaleString()}원`,
+        inline: true,
+      },
     );
   message.reply({ embeds: [embed] });
 }
