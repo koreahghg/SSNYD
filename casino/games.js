@@ -757,7 +757,6 @@ async function handleRouletteButton(interaction) {
         .setColor(win ? 0x22c55e : 0xef4444)
         .setTitle("🎡 룰렛")
         .setDescription(`> ${colorEmoji} **${result}** ${colorEmoji}`)
-        .setImage(ROULETTE_GIFS[result])
         .addFields(
           { name: "베팅", value: betLabel, inline: true },
           { name: "판정", value: win ? "🎉 승리!" : "😔 패배", inline: true },
@@ -770,6 +769,7 @@ async function handleRouletteButton(interaction) {
         ),
     ],
   });
+  activeGamblers.delete(userId);
 }
 
 async function handleButtonInteraction(interaction) {
