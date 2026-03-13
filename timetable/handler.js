@@ -44,7 +44,6 @@ function fetchTimetable(dateStr, classNum) {
         res.on("end", () => {
           try {
             const json = JSON.parse(raw);
-            console.log("[timetable] API response:", JSON.stringify(json).slice(0, 300));
             if (!json.hisTimetable) {
               resolve(null);
               return;
@@ -75,13 +74,10 @@ async function handleTimetable(message) {
   }
 
   const classNum = getClassFromRoles(message.member);
-  const classRole = message.member.roles.cache.find((r) => r.name === `${classNum}반`);
-  if (!classNum || !classRole) {
-    const allRoles = message.member.roles.cache.map((r) => r.name).join(", ");
-    message.reply(`❌ 반 역할이 없습니다.\n보유 역할: ${allRoles}`);
+  if (!classNum) {
+    message.reply("❌ 반 역할이 없습니다. 관리자에게 문의하세요.");
     return true;
   }
-  message.reply(`감지된 반 역할: <@&${classRole.id}> (${classNum}반)`).catch(() => {});
 
   const dateStr = toDateStr(targetDate);
 
