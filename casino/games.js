@@ -31,34 +31,93 @@ function fmt(n) {
 
 // ─── COINFLIP ────────────────────────────────────────────────────────────────
 
+const CF_CHANNEL_ID = "1481328528833380454";
+const CF_HEADS_MSG_ID = "1481869842381541376";
+const CF_TAILS_MSG_ID = "1481869857749336085";
+
 async function handleCoinflip(message, args) {
   const user = await getUser(message.author.id, message.author.username);
   const { error, amount } = parseBet(args[0], user.balance);
   if (error) return message.reply(error);
 
-  const win = Math.random() < 0.5;
-  const delta = win ? amount : -amount;
-  await updateBalance(message.author.id, delta);
-  const updated = await getUser(message.author.id, message.author.username);
+  const uid = message.author.id;
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`cf_heads_${uid}_${amount}`)
+      .setLabel("앞면")
+      .setEmoji("🪙")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`cf_tails_${uid}_${amount}`)
+      .setLabel("뒷면")
+      .setEmoji("💀")
+      .setStyle(ButtonStyle.Secondary),
+  );
 
   const embed = new EmbedBuilder()
+    .setColor(0x3b82f6)
+    .setTitle("🪙 코인플립")
+    .setDescription(`베팅 금액: **${amount.toLocaleString()}원**\n앞면 / 뒷면 중 선택하세요.`);
+
+  activeGamblers.add(uid);
+  message.reply({ embeds: [embed], components: [row] });
+}
+
+async function handleCoinflipButton(interaction) {
+  const parts = interaction.customId.split("_");
+  const choice = parts[1]; // "heads" or "tails"
+  const userId = parts[2];
+  const amount = parseInt(parts[3]);
+
+  if (interaction.user.id !== userId)
+    return interaction.reply({
+      content: "❌ 이 게임은 당신의 게임이 아닙니다.",
+      ephemeral: true,
+    });
+
+  const result = Math.random() < 0.5 ? "heads" : "tails";
+  const win = choice === result;
+  const delta = win ? amount : -amount;
+
+  await updateBalance(userId, delta);
+  const updated = await getUser(userId, interaction.user.username);
+
+  // 결과에 맞는 GIF URL 가져오기
+  let gifUrl = null;
+  try {
+    const channel = await interaction.client.channels.fetch(CF_CHANNEL_ID);
+    const msgId = result === "heads" ? CF_HEADS_MSG_ID : CF_TAILS_MSG_ID;
+    const msg = await channel.messages.fetch(msgId);
+    if (msg.attachments.size > 0) gifUrl = msg.attachments.first().url;
+  } catch (e) {}
+
+  await interaction.deferUpdate();
+
+  // GIF 표시
+  const gifEmbed = new EmbedBuilder()
+    .setColor(0x3b82f6)
+    .setTitle("🪙 코인플립")
+    .setDescription("코인이 돌아가고 있습니다...");
+  if (gifUrl) gifEmbed.setImage(gifUrl);
+
+  await interaction.editReply({ embeds: [gifEmbed], components: [] });
+  await sleep(2000);
+
+  // 결과 표시
+  const resultEmbed = new EmbedBuilder()
     .setColor(win ? 0x22c55e : 0xef4444)
     .setTitle("🪙 코인플립")
     .addFields(
-      {
-        name: "결과",
-        value: win ? "앞면 🪙 승리!" : "뒷면 💀 패배",
-        inline: false,
-      },
+      { name: "선택", value: choice === "heads" ? "앞면 🪙" : "뒷면 💀", inline: true },
+      { name: "결과", value: result === "heads" ? "앞면 🪙" : "뒷면 💀", inline: true },
+      { name: "판정", value: win ? "🎉 승리!" : "😔 패배", inline: true },
       { name: "베팅", value: `${amount.toLocaleString()}원`, inline: true },
       { name: "손익", value: fmt(delta), inline: true },
-      {
-        name: "현재 잔액",
-        value: `${updated.balance.toLocaleString()}원`,
-        inline: true,
-      },
+      { name: "현재 잔액", value: `${updated.balance.toLocaleString()}원`, inline: true },
     );
-  message.reply({ embeds: [embed] });
+
+  await interaction.editReply({ embeds: [resultEmbed] });
+  activeGamblers.delete(userId);
 }
 
 // ─── BLACKJACK ───────────────────────────────────────────────────────────────
@@ -709,6 +768,7 @@ async function handleRouletteButton(interaction) {
 
 async function handleButtonInteraction(interaction) {
   const id = interaction.customId;
+  if (id.startsWith("cf_")) return handleCoinflipButton(interaction);
   if (id.startsWith("bj_")) return handleBjButton(interaction);
   if (id.startsWith("bac_")) return handleBaccaratButton(interaction);
   if (id.startsWith("rl_")) return handleRouletteButton(interaction);
