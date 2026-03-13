@@ -75,10 +75,13 @@ async function handleTimetable(message) {
   }
 
   const classNum = getClassFromRoles(message.member);
-  if (!classNum) {
-    message.reply("❌ 반 역할이 없습니다. 관리자에게 문의하세요.");
+  const classRole = message.member.roles.cache.find((r) => r.name === `${classNum}반`);
+  if (!classNum || !classRole) {
+    const allRoles = message.member.roles.cache.map((r) => r.name).join(", ");
+    message.reply(`❌ 반 역할이 없습니다.\n보유 역할: ${allRoles}`);
     return true;
   }
+  message.reply(`감지된 반 역할: <@&${classRole.id}> (${classNum}반)`).catch(() => {});
 
   const dateStr = toDateStr(targetDate);
 
