@@ -1,9 +1,8 @@
 const { EmbedBuilder } = require("discord.js");
 
-// 멤버 목록 가져오기 (봇 제외)
-async function getHumanMembers(guild) {
-  const members = await guild.members.fetch();
-  return members.filter((m) => !m.user.bot).map((m) => m);
+// 멤버 목록 가져오기 (봇 제외, 캐시 사용)
+function getHumanMembers(guild) {
+  return guild.members.cache.filter((m) => !m.user.bot).map((m) => m);
 }
 
 // Fisher-Yates 셔플 후 앞 n개 선택
@@ -51,7 +50,7 @@ function formatWon(amount) {
 async function handleRandomPick(message, count) {
   if (!message.guild) return message.reply("서버에서만 사용 가능한 명령어입니다.");
 
-  const members = await getHumanMembers(message.guild);
+  const members = getHumanMembers(message.guild);
 
   if (members.length < count) {
     return message.reply(
@@ -82,7 +81,7 @@ async function handleBomb(message, args) {
     return message.reply("❌ 올바른 금액을 입력해주세요. 예: `!폭탄 100000`");
   }
 
-  const members = await getHumanMembers(message.guild);
+  const members = getHumanMembers(message.guild);
   const count = Math.min(9, members.length);
 
   if (count < 2) {
