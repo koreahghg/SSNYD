@@ -29,13 +29,31 @@ function fmt(n) {
   return (n >= 0 ? "+" : "") + n.toLocaleString() + "원";
 }
 
-const CF_HEADS_GIF = "https://cdn.discordapp.com/attachments/1481328528833380454/1481872541520892014/202603131311_3.gif";
-const CF_TAILS_GIF = "https://cdn.discordapp.com/attachments/1481328528833380454/1481872528333996154/202603131311_2.gif";
+const CF_HEADS_GIF =
+  "https://cdn.discordapp.com/attachments/1481328528833380454/1481872541520892014/202603131311_3.gif";
+const CF_TAILS_GIF =
+  "https://cdn.discordapp.com/attachments/1481328528833380454/1481872528333996154/202603131311_2.gif";
 
 const SUITS = ["♠", "♥", "♦", "♣"];
-const VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const VALUES = [
+  "A",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "J",
+  "Q",
+  "K",
+];
 
-const RED_NUMS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+const RED_NUMS = new Set([
+  1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36,
+]);
 
 const ROULETTE_GIFS = [
   "https://cdn.discordapp.com/attachments/1481972735684120607/1481972772111650930/202603132003.gif?ex=69b54232&is=69b3f0b2&hm=37b2d8ab6beafaa5a6f2d33089a4e841f5831605a1d2f269830c9ae1645d2f0b&",
@@ -108,13 +126,21 @@ function bjHandVal(hand) {
 }
 
 function bjHandStr(hand, hideSecond = false) {
-  return hand.map((c, i) => (hideSecond && i === 1 ? "🂠" : `${c.s}${c.v}`)).join("  ");
+  return hand
+    .map((c, i) => (hideSecond && i === 1 ? "🂠" : `${c.s}${c.v}`))
+    .join("  ");
 }
 
 function buildBjRow(userId) {
   return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`bj_hit_${userId}`).setLabel("히트").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`bj_stand_${userId}`).setLabel("스탠드").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bj_hit_${userId}`)
+      .setLabel("히트")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bj_stand_${userId}`)
+      .setLabel("스탠드")
+      .setStyle(ButtonStyle.Secondary),
   );
 }
 
@@ -162,20 +188,32 @@ function runBaccarat() {
 }
 
 async function handleCoinflip(message, args) {
-  const user = await getUser(message.guild.id, message.author.id, message.author.username);
+  const user = await getUser(
+    message.guild.id,
+    message.author.id,
+    message.author.username,
+  );
   const { error, amount } = parseBet(args[0], user.balance);
   if (error) return message.reply(error);
 
   const uid = message.author.id;
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`cf_heads_${uid}_${amount}`).setLabel("앞면").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`cf_tails_${uid}_${amount}`).setLabel("뒷면").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`cf_heads_${uid}_${amount}`)
+      .setLabel("앞면")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`cf_tails_${uid}_${amount}`)
+      .setLabel("뒷면")
+      .setStyle(ButtonStyle.Secondary),
   );
 
   const embed = new EmbedBuilder()
     .setColor(0x3b82f6)
     .setTitle("🪙 코인플립")
-    .setDescription(`베팅 금액: **${amount.toLocaleString()}원**\n앞면 / 뒷면 중 선택하세요.`);
+    .setDescription(
+      `베팅 금액: **${amount.toLocaleString()}원**\n앞면 / 뒷면 중 선택하세요.`,
+    );
 
   activeGamblers.add(uid);
   message.reply({ embeds: [embed], components: [row] });
@@ -188,14 +226,21 @@ async function handleCoinflipButton(interaction) {
   const amount = parseInt(parts[3]);
 
   if (interaction.user.id !== userId)
-    return interaction.reply({ content: "❌ 이 게임은 당신의 게임이 아닙니다.", ephemeral: true });
+    return interaction.reply({
+      content: "❌ 이 게임은 당신의 게임이 아닙니다.",
+      ephemeral: true,
+    });
 
   const result = Math.random() < 0.5 ? "heads" : "tails";
   const win = choice === result;
   const delta = win ? amount : -amount;
 
   await updateBalance(interaction.guildId, userId, delta);
-  const updated = await getUser(interaction.guildId, userId, interaction.user.username);
+  const updated = await getUser(
+    interaction.guildId,
+    userId,
+    interaction.user.username,
+  );
   const gifUrl = result === "heads" ? CF_HEADS_GIF : CF_TAILS_GIF;
 
   await interaction.deferUpdate();
@@ -217,12 +262,24 @@ async function handleCoinflipButton(interaction) {
         .setColor(win ? 0x22c55e : 0xef4444)
         .setTitle("🪙 코인플립")
         .addFields(
-          { name: "선택", value: choice === "heads" ? "앞면 🪙" : "뒷면 💀", inline: true },
-          { name: "결과", value: result === "heads" ? "앞면 🪙" : "뒷면 💀", inline: true },
+          {
+            name: "선택",
+            value: choice === "heads" ? "앞면 🪙" : "뒷면 💀",
+            inline: true,
+          },
+          {
+            name: "결과",
+            value: result === "heads" ? "앞면 🪙" : "뒷면 💀",
+            inline: true,
+          },
           { name: "판정", value: win ? "🎉 승리!" : "😔 패배", inline: true },
           { name: "베팅", value: `${amount.toLocaleString()}원`, inline: true },
           { name: "손익", value: fmt(delta), inline: true },
-          { name: "현재 잔액", value: `${updated.balance.toLocaleString()}원`, inline: true },
+          {
+            name: "현재 잔액",
+            value: `${updated.balance.toLocaleString()}원`,
+            inline: true,
+          },
         ),
     ],
   });
@@ -233,7 +290,11 @@ async function handleBlackjack(message, args) {
   if (bjGames.has(message.author.id))
     return message.reply("❌ 이미 진행 중인 블랙잭 게임이 있습니다.");
 
-  const user = await getUser(message.guild.id, message.author.id, message.author.username);
+  const user = await getUser(
+    message.guild.id,
+    message.author.id,
+    message.author.username,
+  );
   const { error, amount } = parseBet(args[0], user.balance);
   if (error) return message.reply(error);
 
@@ -256,24 +317,46 @@ async function handleBlackjack(message, args) {
       delta = amount;
       resultText = "🎉 블랙잭! 승리!";
     }
-    const updated = await getUser(message.guild.id, message.author.id, message.author.username);
+    const updated = await getUser(
+      message.guild.id,
+      message.author.id,
+      message.author.username,
+    );
     return message.reply({
       embeds: [
         new EmbedBuilder()
           .setColor(delta >= 0 ? 0xf59e0b : 0x6b7280)
           .setTitle("🃏 블랙잭")
           .addFields(
-            { name: "내 패", value: `${bjHandStr(player)} (${pVal})`, inline: false },
-            { name: "딜러 패", value: `${bjHandStr(dealer)} (${dVal})`, inline: false },
+            {
+              name: "내 패",
+              value: `${bjHandStr(player)} (${pVal})`,
+              inline: false,
+            },
+            {
+              name: "딜러 패",
+              value: `${bjHandStr(dealer)} (${dVal})`,
+              inline: false,
+            },
             { name: "결과", value: resultText, inline: true },
             { name: "손익", value: fmt(delta), inline: true },
-            { name: "현재 잔액", value: `${updated.balance.toLocaleString()}원`, inline: true },
+            {
+              name: "현재 잔액",
+              value: `${updated.balance.toLocaleString()}원`,
+              inline: true,
+            },
           ),
       ],
     });
   }
 
-  bjGames.set(message.author.id, { deck, player, dealer, bet: amount, guildId: message.guild.id });
+  bjGames.set(message.author.id, {
+    deck,
+    player,
+    dealer,
+    bet: amount,
+    guildId: message.guild.id,
+  });
   activeGamblers.add(message.author.id);
 
   message.reply({
@@ -282,7 +365,11 @@ async function handleBlackjack(message, args) {
         .setColor(0x3b82f6)
         .setTitle("🃏 블랙잭")
         .addFields(
-          { name: "내 패", value: `${bjHandStr(player)} (${pVal})`, inline: false },
+          {
+            name: "내 패",
+            value: `${bjHandStr(player)} (${pVal})`,
+            inline: false,
+          },
           { name: "딜러 패", value: bjHandStr(dealer, true), inline: false },
         )
         .setFooter({ text: "버튼을 눌러 진행하세요." }),
@@ -297,7 +384,10 @@ async function handleBjButton(interaction) {
   const userId = parts[2];
 
   if (interaction.user.id !== userId)
-    return interaction.reply({ content: "❌ 이 게임은 당신의 게임이 아닙니다.", ephemeral: true });
+    return interaction.reply({
+      content: "❌ 이 게임은 당신의 게임이 아닙니다.",
+      ephemeral: true,
+    });
 
   const game = bjGames.get(userId);
   if (!game) return interaction.update({ components: [] });
@@ -309,18 +399,34 @@ async function handleBjButton(interaction) {
     if (val > 21) {
       bjGames.delete(userId);
       activeGamblers.delete(userId);
-      const updated = await getUser(game.guildId, userId, interaction.user.username);
+      const updated = await getUser(
+        game.guildId,
+        userId,
+        interaction.user.username,
+      );
       return interaction.update({
         embeds: [
           new EmbedBuilder()
             .setColor(0xef4444)
             .setTitle("🃏 블랙잭")
             .addFields(
-              { name: "내 패", value: `${bjHandStr(game.player)} (${val})`, inline: false },
-              { name: "딜러 패", value: `${bjHandStr(game.dealer)} (${bjHandVal(game.dealer)})`, inline: false },
+              {
+                name: "내 패",
+                value: `${bjHandStr(game.player)} (${val})`,
+                inline: false,
+              },
+              {
+                name: "딜러 패",
+                value: `${bjHandStr(game.dealer)} (${bjHandVal(game.dealer)})`,
+                inline: false,
+              },
               { name: "결과", value: "💥 버스트! 패배", inline: true },
               { name: "손익", value: fmt(-game.bet), inline: true },
-              { name: "현재 잔액", value: `${updated.balance.toLocaleString()}원`, inline: true },
+              {
+                name: "현재 잔액",
+                value: `${updated.balance.toLocaleString()}원`,
+                inline: true,
+              },
             ),
         ],
         components: [],
@@ -333,8 +439,16 @@ async function handleBjButton(interaction) {
           .setColor(0x3b82f6)
           .setTitle("🃏 블랙잭")
           .addFields(
-            { name: "내 패", value: `${bjHandStr(game.player)} (${val})`, inline: false },
-            { name: "딜러 패", value: bjHandStr(game.dealer, true), inline: false },
+            {
+              name: "내 패",
+              value: `${bjHandStr(game.player)} (${val})`,
+              inline: false,
+            },
+            {
+              name: "딜러 패",
+              value: bjHandStr(game.dealer, true),
+              inline: false,
+            },
           )
           .setFooter({ text: "버튼을 눌러 진행하세요." }),
       ],
@@ -364,18 +478,34 @@ async function handleBjButton(interaction) {
       resultText = "😔 패배";
     }
 
-    const updated = await getUser(game.guildId, userId, interaction.user.username);
+    const updated = await getUser(
+      game.guildId,
+      userId,
+      interaction.user.username,
+    );
     return interaction.update({
       embeds: [
         new EmbedBuilder()
           .setColor(delta > 0 ? 0x22c55e : delta === 0 ? 0x6b7280 : 0xef4444)
           .setTitle("🃏 블랙잭")
           .addFields(
-            { name: "내 패", value: `${bjHandStr(game.player)} (${pVal})`, inline: false },
-            { name: "딜러 패", value: `${bjHandStr(game.dealer)} (${dVal})`, inline: false },
+            {
+              name: "내 패",
+              value: `${bjHandStr(game.player)} (${pVal})`,
+              inline: false,
+            },
+            {
+              name: "딜러 패",
+              value: `${bjHandStr(game.dealer)} (${dVal})`,
+              inline: false,
+            },
             { name: "결과", value: resultText, inline: true },
             { name: "손익", value: fmt(delta), inline: true },
-            { name: "현재 잔액", value: `${updated.balance.toLocaleString()}원`, inline: true },
+            {
+              name: "현재 잔액",
+              value: `${updated.balance.toLocaleString()}원`,
+              inline: true,
+            },
           ),
       ],
       components: [],
@@ -384,15 +514,28 @@ async function handleBjButton(interaction) {
 }
 
 async function handleBaccarat(message, args) {
-  const user = await getUser(message.guild.id, message.author.id, message.author.username);
+  const user = await getUser(
+    message.guild.id,
+    message.author.id,
+    message.author.username,
+  );
   const { error, amount } = parseBet(args[0], user.balance);
   if (error) return message.reply(error);
 
   const uid = message.author.id;
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`bac_player_${uid}_${amount}`).setLabel("플레이어").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`bac_tie_${uid}_${amount}`).setLabel("타이").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`bac_banker_${uid}_${amount}`).setLabel("뱅커").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bac_player_${uid}_${amount}`)
+      .setLabel("플레이어")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bac_tie_${uid}_${amount}`)
+      .setLabel("타이")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bac_banker_${uid}_${amount}`)
+      .setLabel("뱅커")
+      .setStyle(ButtonStyle.Secondary),
   );
 
   activeGamblers.add(uid);
@@ -401,7 +544,9 @@ async function handleBaccarat(message, args) {
       new EmbedBuilder()
         .setColor(0x3b82f6)
         .setTitle("🎴 바카라")
-        .setDescription(`베팅 금액: **${amount.toLocaleString()}원**\n어디에 베팅할까요?`),
+        .setDescription(
+          `베팅 금액: **${amount.toLocaleString()}원**\n어디에 베팅할까요?`,
+        ),
     ],
     components: [row],
   });
@@ -414,13 +559,25 @@ async function handleBaccaratButton(interaction) {
   const amount = parseInt(parts[3]);
 
   if (interaction.user.id !== userId)
-    return interaction.reply({ content: "❌ 이 게임은 당신의 게임이 아닙니다.", ephemeral: true });
+    return interaction.reply({
+      content: "❌ 이 게임은 당신의 게임이 아닙니다.",
+      ephemeral: true,
+    });
 
-  const user = await getUser(interaction.guildId, userId, interaction.user.username);
+  const user = await getUser(
+    interaction.guildId,
+    userId,
+    interaction.user.username,
+  );
   if (user.balance < amount) {
     activeGamblers.delete(userId);
     return interaction.update({
-      embeds: [new EmbedBuilder().setColor(0xef4444).setTitle("🎴 바카라").setDescription("❌ 잔액이 부족합니다.")],
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0xef4444)
+          .setTitle("🎴 바카라")
+          .setDescription("❌ 잔액이 부족합니다."),
+      ],
       components: [],
     });
   }
@@ -430,7 +587,11 @@ async function handleBaccaratButton(interaction) {
 
   const isTie = winner === "tie";
   const userWin = side === winner;
-  const sideLabel = { player: "👤 플레이어", banker: "🏦 뱅커", tie: "🤝 타이" }[side];
+  const sideLabel = {
+    player: "👤 플레이어",
+    banker: "🏦 뱅커",
+    tie: "🤝 타이",
+  }[side];
 
   let delta;
   if (isTie && side === "tie") {
@@ -446,16 +607,34 @@ async function handleBaccaratButton(interaction) {
     delta = -amount;
   }
 
-  const updated = await getUser(interaction.guildId, userId, interaction.user.username);
+  const updated = await getUser(
+    interaction.guildId,
+    userId,
+    interaction.user.username,
+  );
   const resultText = isTie
-    ? side === "tie" ? "🎉 타이 적중!" : "🤝 타이 (베팅 반환)"
-    : userWin ? "🎉 승리!" : "😔 패배";
-  const resultColor = userWin || (isTie && side === "tie") ? 0x22c55e : isTie ? 0x6b7280 : 0xef4444;
+    ? side === "tie"
+      ? "🎉 타이 적중!"
+      : "🤝 타이 (베팅 반환)"
+    : userWin
+      ? "🎉 승리!"
+      : "😔 패배";
+  const resultColor =
+    userWin || (isTie && side === "tie")
+      ? 0x22c55e
+      : isTie
+        ? 0x6b7280
+        : 0xef4444;
 
   await interaction.deferUpdate();
 
   await interaction.editReply({
-    embeds: [new EmbedBuilder().setColor(0x3b82f6).setTitle("🎴 바카라").setDescription("🂠  🂠  카드를 배분하고 있습니다...\n🂠  🂠")],
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x3b82f6)
+        .setTitle("🎴 바카라")
+        .setDescription("🂠  🂠  카드를 배분하고 있습니다...\n🂠  🂠"),
+    ],
     components: [],
   });
   await sleep(800);
@@ -466,8 +645,16 @@ async function handleBaccaratButton(interaction) {
         .setColor(0x3b82f6)
         .setTitle("🎴 바카라")
         .addFields(
-          { name: "👤 플레이어", value: cardStr(player.slice(0, 1)) + "  🂠", inline: true },
-          { name: "🏦 뱅커", value: cardStr(banker.slice(0, 1)) + "  🂠", inline: true },
+          {
+            name: "👤 플레이어",
+            value: cardStr(player.slice(0, 1)) + "  🂠",
+            inline: true,
+          },
+          {
+            name: "🏦 뱅커",
+            value: cardStr(banker.slice(0, 1)) + "  🂠",
+            inline: true,
+          },
         ),
     ],
   });
@@ -479,10 +666,23 @@ async function handleBaccaratButton(interaction) {
         .setColor(0x3b82f6)
         .setTitle("🎴 바카라")
         .addFields(
-          { name: "👤 플레이어", value: `${cardStr(player.slice(0, 2))}  **(${bacHandVal(player.slice(0, 2))})**`, inline: true },
-          { name: "🏦 뱅커", value: `${cardStr(banker.slice(0, 2))}  **(${bacHandVal(banker.slice(0, 2))})**`, inline: true },
+          {
+            name: "👤 플레이어",
+            value: `${cardStr(player.slice(0, 2))}  **(${bacHandVal(player.slice(0, 2))})**`,
+            inline: true,
+          },
+          {
+            name: "🏦 뱅커",
+            value: `${cardStr(banker.slice(0, 2))}  **(${bacHandVal(banker.slice(0, 2))})**`,
+            inline: true,
+          },
         )
-        .setFooter({ text: player.length > 2 || banker.length > 2 ? "3번째 카드 배분 중..." : "결과 집계 중..." }),
+        .setFooter({
+          text:
+            player.length > 2 || banker.length > 2
+              ? "3번째 카드 배분 중..."
+              : "결과 집계 중...",
+        }),
     ],
   });
   await sleep(900);
@@ -494,8 +694,16 @@ async function handleBaccaratButton(interaction) {
           .setColor(0x3b82f6)
           .setTitle("🎴 바카라")
           .addFields(
-            { name: "👤 플레이어", value: `${cardStr(player)}  **(${pVal})**`, inline: true },
-            { name: "🏦 뱅커", value: `${cardStr(banker)}  **(${bVal})**`, inline: true },
+            {
+              name: "👤 플레이어",
+              value: `${cardStr(player)}  **(${pVal})**`,
+              inline: true,
+            },
+            {
+              name: "🏦 뱅커",
+              value: `${cardStr(banker)}  **(${bVal})**`,
+              inline: true,
+            },
           )
           .setFooter({ text: "결과 집계 중..." }),
       ],
@@ -509,12 +717,24 @@ async function handleBaccaratButton(interaction) {
         .setColor(resultColor)
         .setTitle("🎴 바카라")
         .addFields(
-          { name: "👤 플레이어", value: `${cardStr(player)}  **(${pVal})**`, inline: true },
-          { name: "🏦 뱅커", value: `${cardStr(banker)}  **(${bVal})**`, inline: true },
+          {
+            name: "👤 플레이어",
+            value: `${cardStr(player)}  **(${pVal})**`,
+            inline: true,
+          },
+          {
+            name: "🏦 뱅커",
+            value: `${cardStr(banker)}  **(${bVal})**`,
+            inline: true,
+          },
           { name: "내 베팅", value: sideLabel, inline: true },
           { name: "판정", value: resultText, inline: true },
           { name: "손익", value: fmt(delta), inline: true },
-          { name: "현재 잔액", value: `${updated.balance.toLocaleString()}원`, inline: true },
+          {
+            name: "현재 잔액",
+            value: `${updated.balance.toLocaleString()}원`,
+            inline: true,
+          },
         ),
     ],
   });
@@ -522,16 +742,32 @@ async function handleBaccaratButton(interaction) {
 }
 
 async function handleRoulette(message, args) {
-  const user = await getUser(message.guild.id, message.author.id, message.author.username);
+  const user = await getUser(
+    message.guild.id,
+    message.author.id,
+    message.author.username,
+  );
   const { error, amount } = parseBet(args[0], user.balance);
   if (error) return message.reply(error);
 
   const uid = message.author.id;
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`rl_odd_${uid}_${amount}`).setLabel("홀").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`rl_even_${uid}_${amount}`).setLabel("짝").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`rl_black_${uid}_${amount}`).setLabel("검").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`rl_red_${uid}_${amount}`).setLabel("빨").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`rl_odd_${uid}_${amount}`)
+      .setLabel("홀")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`rl_even_${uid}_${amount}`)
+      .setLabel("짝")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`rl_black_${uid}_${amount}`)
+      .setLabel("검")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`rl_red_${uid}_${amount}`)
+      .setLabel("빨")
+      .setStyle(ButtonStyle.Secondary),
   );
 
   activeGamblers.add(uid);
@@ -540,7 +776,9 @@ async function handleRoulette(message, args) {
       new EmbedBuilder()
         .setColor(0x3b82f6)
         .setTitle("룰렛")
-        .setDescription(`베팅 금액: **${amount.toLocaleString()}원**\n홀 / 짝 / 검 / 빨 중 선택하세요.`),
+        .setDescription(
+          `베팅 금액: **${amount.toLocaleString()}원**\n홀 / 짝 / 검 / 빨 중 선택하세요.`,
+        ),
     ],
     components: [row],
   });
@@ -553,12 +791,24 @@ async function handleRouletteButton(interaction) {
   const amount = parseInt(parts[3]);
 
   if (interaction.user.id !== userId)
-    return interaction.reply({ content: "❌ 이 게임은 당신의 게임이 아닙니다.", ephemeral: true });
+    return interaction.reply({
+      content: "❌ 이 게임은 당신의 게임이 아닙니다.",
+      ephemeral: true,
+    });
 
-  const user = await getUser(interaction.guildId, userId, interaction.user.username);
+  const user = await getUser(
+    interaction.guildId,
+    userId,
+    interaction.user.username,
+  );
   if (user.balance < amount)
     return interaction.update({
-      embeds: [new EmbedBuilder().setColor(0xef4444).setTitle("🎡 룰렛").setDescription("❌ 잔액이 부족합니다.")],
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0xef4444)
+          .setTitle("🎡 룰렛")
+          .setDescription("❌ 잔액이 부족합니다."),
+      ],
       components: [],
     });
 
@@ -568,17 +818,27 @@ async function handleRouletteButton(interaction) {
   const colorEmoji = result === 0 ? "🟢" : RED_NUMS.has(result) ? "🔴" : "⚫";
 
   const win =
-    betType === "odd" ? result !== 0 && result % 2 === 1
-    : betType === "even" ? result !== 0 && result % 2 === 0
-    : betType === "red" ? RED_NUMS.has(result)
-    : betType === "black" ? result !== 0 && !RED_NUMS.has(result)
-    : false;
+    betType === "odd"
+      ? result !== 0 && result % 2 === 1
+      : betType === "even"
+        ? result !== 0 && result % 2 === 0
+        : betType === "red"
+          ? RED_NUMS.has(result)
+          : betType === "black"
+            ? result !== 0 && !RED_NUMS.has(result)
+            : false;
 
   if (win) await updateBalance(interaction.guildId, userId, amount * 2);
 
   const delta = win ? amount : -amount;
-  const updated = await getUser(interaction.guildId, userId, interaction.user.username);
-  const betLabel = { odd: "홀", even: "짝", black: "⚫ 검", red: "🔴 빨" }[betType];
+  const updated = await getUser(
+    interaction.guildId,
+    userId,
+    interaction.user.username,
+  );
+  const betLabel = { odd: "홀", even: "짝", black: "⚫ 검", red: "🔴 빨" }[
+    betType
+  ];
 
   await interaction.deferUpdate();
   await interaction.editReply({
@@ -603,7 +863,11 @@ async function handleRouletteButton(interaction) {
           { name: "베팅", value: betLabel, inline: true },
           { name: "판정", value: win ? "🎉 승리!" : "😔 패배", inline: true },
           { name: "손익", value: fmt(delta), inline: true },
-          { name: "현재 잔액", value: `${updated.balance.toLocaleString()}원`, inline: true },
+          {
+            name: "현재 잔액",
+            value: `${updated.balance.toLocaleString()}원`,
+            inline: true,
+          },
         ),
     ],
   });
