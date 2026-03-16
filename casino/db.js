@@ -13,14 +13,27 @@ const pool = mysql.createPool({
 async function init() {
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS users (
-      id VARCHAR(30) PRIMARY KEY,
+      id VARCHAR(30) NOT NULL,
+      guild_id VARCHAR(30) NOT NULL DEFAULT '',
       username VARCHAR(100) NOT NULL,
       balance BIGINT NOT NULL DEFAULT 150000,
       last_attendance DATETIME NULL,
       last_work DATETIME NULL,
-      last_support DATETIME NULL
+      last_support DATETIME NULL,
+      PRIMARY KEY (id, guild_id)
     )
   `);
+
+  try {
+    await pool.execute(
+      `ALTER TABLE users ADD COLUMN guild_id VARCHAR(30) NOT NULL DEFAULT ''`,
+    );
+  } catch (_) {}
+  try {
+    await pool.execute(
+      `ALTER TABLE users DROP PRIMARY KEY, ADD PRIMARY KEY (id, guild_id)`,
+    );
+  } catch (_) {}
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS schedules (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,32 +46,38 @@ async function init() {
   `);
 }
 
-async function getUser(id, username) {
+async function getUser(guildId, id, username) {
   await pool.execute(
-    `INSERT IGNORE INTO users (id, username) VALUES (?, ?)`,
-    [id, username]
+    `INSERT IGNORE INTO users (id, guild_id, username) VALUES (?, ?, ?)`,
+    [id, guildId, username],
   );
-  const [rows] = await pool.execute(`SELECT * FROM users WHERE id = ?`, [id]);
+  const [rows] = await pool.execute(
+    `SELECT * FROM users WHERE id = ? AND guild_id = ?`,
+    [id, guildId],
+  );
   return rows[0];
 }
 
-async function updateBalance(id, delta) {
+async function updateBalance(guildId, id, delta) {
   await pool.execute(
-    `UPDATE users SET balance = balance + ? WHERE id = ?`,
-    [delta, id]
+    `UPDATE users SET balance = balance + ? WHERE id = ? AND guild_id = ?`,
+    [delta, id, guildId],
   );
 }
 
-async function setField(id, field, value) {
+async function setField(guildId, id, field, value) {
   const allowed = ["last_attendance", "last_work", "last_support"];
   if (!allowed.includes(field)) throw new Error(`Invalid field: ${field}`);
-  await pool.execute(`UPDATE users SET ${field} = ? WHERE id = ?`, [value, id]);
+  await pool.execute(
+    `UPDATE users SET ${field} = ? WHERE id = ? AND guild_id = ?`,
+    [value, id, guildId],
+  );
 }
 
-async function getTopUsers(limit = 10) {
+async function getTopUsers(guildId, limit = 10) {
   const [rows] = await pool.execute(
-    `SELECT * FROM users ORDER BY balance DESC LIMIT ?`,
-    [limit]
+    `SELECT * FROM users WHERE guild_id = ? ORDER BY balance DESC LIMIT ?`,
+    [guildId, limit],
   );
   return rows;
 }
@@ -66,7 +85,7 @@ async function getTopUsers(limit = 10) {
 async function addSchedule(channelId, channelName, message, hour, minute) {
   const [result] = await pool.execute(
     `INSERT INTO schedules (channel_id, channel_name, message, hour, minute) VALUES (?, ?, ?, ?, ?)`,
-    [channelId, channelName, message, hour, minute]
+    [channelId, channelName, message, hour, minute],
   );
   return result.insertId;
 }
@@ -77,8 +96,19 @@ async function getSchedules() {
 }
 
 async function deleteSchedule(id) {
-  const [result] = await pool.execute(`DELETE FROM schedules WHERE id = ?`, [id]);
+  const [result] = await pool.execute(`DELETE FROM schedules WHERE id = ?`, [
+    id,
+  ]);
   return result.affectedRows > 0;
 }
 
-module.exports = { init, getUser, updateBalance, setField, getTopUsers, addSchedule, getSchedules, deleteSchedule };
+module.exports = {
+  init,
+  getUser,
+  updateBalance,
+  setField,
+  getTopUsers,
+  addSchedule,
+  getSchedules,
+  deleteSchedule,
+};

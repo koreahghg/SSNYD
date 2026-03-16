@@ -1,10 +1,63 @@
-const { Client, Events, GatewayIntentBits } = require("discord.js");
+const { Client, Events, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 const { handleCasino, handleButtonInteraction } = require("./casino/handler");
 const { handleMeal } = require("./meal/handler");
 const { handleScheduler, initScheduler } = require("./scheduler/handler");
 const { handleTimetable } = require("./timetable/handler");
 const { init: initDb } = require("./casino/db");
 const { handleRandom } = require("./random/handler");
+
+async function handleHelp(message) {
+  if (message.content.trim() !== "!명령어") return false;
+  const embed = new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setTitle("📖 명령어 목록")
+    .addFields(
+      {
+        name: "🍽️ 급식",
+        value: [
+          "`!밥` / `!급식` — 현재 시간대 급식",
+          "`!오늘아침` / `!오늘점심` / `!오늘저녁`",
+          "`!내일아침` / `!내일점심` / `!내일저녁`",
+        ].join("\n"),
+      },
+      {
+        name: "📅 시간표",
+        value: "`!시간표` — 오늘(또는 다음 날) 시간표",
+      },
+      {
+        name: "💰 경제",
+        value: [
+          "`!출석` — 매일 10,000원 지급",
+          "`!일` / `!노동` — 10,000~30,000원 (1분 쿨다운)",
+          "`!잔액` — 내 잔액 확인",
+          "`!지원금` — 잔액 0원일 때 100,000원 (1시간 쿨다운)",
+          "`!송금 @멘션 금액` — 다른 유저에게 송금",
+          "`!랭킹` — 서버 잔액 TOP 10",
+        ].join("\n"),
+      },
+      {
+        name: "🎰 도박",
+        value: [
+          "`!코인 금액` — 코인플립 (앞/뒷면)",
+          "`!블랙잭 금액` — 블랙잭",
+          "`!바카라 금액` — 바카라 (플레이어/뱅커/타이)",
+          "`!룰렛 금액` — 룰렛 (홀/짝/검/빨)",
+          "※ 금액 대신 `올인` / `반` 사용 가능",
+        ].join("\n"),
+      },
+      {
+        name: "🔔 알림",
+        value: [
+          "`!보내기` — 정기 알림 설정",
+          "`!알림목록` — 등록된 알림 확인",
+          "`!알림삭제 번호` — 알림 삭제",
+          "`!보내기취소` — 설정 중 취소",
+        ].join("\n"),
+      },
+    );
+  message.reply({ embeds: [embed] });
+  return true;
+}
 
 const token = process.env.DISCORD_TOKEN;
 const client = new Client({
@@ -29,6 +82,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
+  if (await handleHelp(message)) return;
   if (await handleCasino(message)) return;
   if (await handleRandom(message)) return;
   if (await handleScheduler(message)) return;

@@ -14,7 +14,8 @@ function cooldownLeft(lastTime, ms) {
 }
 
 async function handleAttendance(message) {
-  const user = await getUser(message.author.id, message.author.username);
+  const guildId = message.guild.id;
+  const user = await getUser(guildId, message.author.id, message.author.username);
   if (user.last_attendance) {
     const lastDate = toKSTDateStr(new Date(user.last_attendance));
     const today = toKSTDateStr(new Date());
@@ -22,13 +23,14 @@ async function handleAttendance(message) {
       return message.reply("⏳ 오늘 이미 출석했습니다. 내일 다시 출석하세요.");
   }
 
-  await updateBalance(message.author.id, 10000);
+  await updateBalance(guildId, message.author.id, 10000);
   await setField(
+    guildId,
     message.author.id,
     "last_attendance",
     toMysqlDatetime(new Date()),
   );
-  const updated = await getUser(message.author.id, message.author.username);
+  const updated = await getUser(guildId, message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
     .setColor(0x22c55e)
@@ -45,14 +47,15 @@ async function handleAttendance(message) {
 }
 
 async function handleWork(message) {
-  const user = await getUser(message.author.id, message.author.username);
+  const guildId = message.guild.id;
+  const user = await getUser(guildId, message.author.id, message.author.username);
   const left = cooldownLeft(user.last_work, 60 * 1000);
   if (left) return message.reply(`⏳ **${left}** 후에 다시 일할 수 있습니다.`);
 
   const reward = Math.floor(Math.random() * 20001) + 10000;
-  await updateBalance(message.author.id, reward);
-  await setField(message.author.id, "last_work", toMysqlDatetime(new Date()));
-  const updated = await getUser(message.author.id, message.author.username);
+  await updateBalance(guildId, message.author.id, reward);
+  await setField(guildId, message.author.id, "last_work", toMysqlDatetime(new Date()));
+  const updated = await getUser(guildId, message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
     .setColor(0x3b82f6)
@@ -69,7 +72,7 @@ async function handleWork(message) {
 }
 
 async function handleBalance(message) {
-  const user = await getUser(message.author.id, message.author.username);
+  const user = await getUser(message.guild.id, message.author.id, message.author.username);
   const embed = new EmbedBuilder()
     .setColor(0x3b82f6)
     .setTitle(`💰 ${message.author.username}의 잔액`)
@@ -78,7 +81,8 @@ async function handleBalance(message) {
 }
 
 async function handleSupport(message) {
-  const user = await getUser(message.author.id, message.author.username);
+  const guildId = message.guild.id;
+  const user = await getUser(guildId, message.author.id, message.author.username);
   if (user.balance > 0)
     return message.reply("❌ 잔액이 0원일 때만 지원금을 받을 수 있습니다.");
 
@@ -86,13 +90,14 @@ async function handleSupport(message) {
   if (left)
     return message.reply(`⏳ **${left}** 후에 다시 신청할 수 있습니다.`);
 
-  await updateBalance(message.author.id, 100000);
+  await updateBalance(guildId, message.author.id, 100000);
   await setField(
+    guildId,
     message.author.id,
     "last_support",
     toMysqlDatetime(new Date()),
   );
-  const updated = await getUser(message.author.id, message.author.username);
+  const updated = await getUser(guildId, message.author.id, message.author.username);
 
   const embed = new EmbedBuilder()
     .setColor(0xf59e0b)
@@ -109,6 +114,7 @@ async function handleSupport(message) {
 }
 
 async function handleTransfer(message, args) {
+  const guildId = message.guild.id;
   const mention = message.mentions.users.first();
   if (!mention)
     return message.reply(
@@ -122,7 +128,7 @@ async function handleTransfer(message, args) {
   if (!amountStr)
     return message.reply("❌ 송금 금액을 입력하세요. 예) `!송금 @이름 10000`");
 
-  const sender = await getUser(message.author.id, message.author.username);
+  const sender = await getUser(guildId, message.author.id, message.author.username);
   const lower = amountStr.toLowerCase();
   const amount =
     lower === "올인" || lower === "all"
@@ -139,10 +145,11 @@ async function handleTransfer(message, args) {
   const tax = Math.floor(amount * (taxRate / 100));
   const received = amount - tax;
 
-  await updateBalance(message.author.id, -amount);
-  await getUser(mention.id, mention.username);
-  await updateBalance(mention.id, received);
+  await updateBalance(guildId, message.author.id, -amount);
+  await getUser(guildId, mention.id, mention.username);
+  await updateBalance(guildId, mention.id, received);
   const senderUpdated = await getUser(
+    guildId,
     message.author.id,
     message.author.username,
   );
@@ -170,7 +177,7 @@ async function handleTransfer(message, args) {
 }
 
 async function handleRanking(message) {
-  const users = await getTopUsers(10);
+  const users = await getTopUsers(message.guild.id, 10);
   const medals = ["🥇", "🥈", "🥉"];
   const list = users
     .map(

@@ -11,7 +11,6 @@ function getClassFromRoles(member) {
   return null;
 }
 
-// 오늘 기준 다음 수업일 계산 (16:40 이후면 내일로, 주말 스킵)
 function getTargetDate() {
   const kst = kstNow();
   const t = kst.getUTCHours() * 60 + kst.getUTCMinutes();
@@ -46,7 +45,7 @@ async function handleTimetable(message) {
   const subjects = data.schedule[dayName];
 
   if (!subjects || subjects.length === 0) {
-    message.reply("😢 해당 요일의 시간표 정보가 없습니다.");
+    message.reply("해당 요일의 시간표 정보가 없습니다.");
     return true;
   }
 
