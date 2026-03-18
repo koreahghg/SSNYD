@@ -59,7 +59,7 @@ async function handleMeal(message) {
 
   let mealType, dayLabel, dateStr;
 
-  if (["!밥", "!ㅂ", "!급식", "!ㄱㅅ", "!ㄳ"].includes(content)) {
+  if (["!밥", "!ㅂ", "!q", "!급식", "!ㄱㅅ", "!ㄳ", "!rt"].includes(content)) {
     ({ type: mealType, dayLabel, dateStr } = getMealByTime());
   } else if (content === "!오늘아침") { mealType = 1; dayLabel = "오늘"; dateStr = todayStr; }
   else if (content === "!오늘점심") { mealType = 2; dayLabel = "오늘"; dateStr = todayStr; }
