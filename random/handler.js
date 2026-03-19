@@ -1,6 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
-
-async function handleRandom(message) {
+async function handleRandom(_message) {
   return false;
 }
 

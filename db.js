@@ -23,17 +23,8 @@ async function init() {
       PRIMARY KEY (id, guild_id)
     )
   `);
-
-  try {
-    await pool.execute(
-      `ALTER TABLE users ADD COLUMN guild_id VARCHAR(30) NOT NULL DEFAULT ''`,
-    );
-  } catch (_) {}
-  try {
-    await pool.execute(
-      `ALTER TABLE users DROP PRIMARY KEY, ADD PRIMARY KEY (id, guild_id)`,
-    );
-  } catch (_) {}
+  try { await pool.execute(`ALTER TABLE users ADD COLUMN guild_id VARCHAR(30) NOT NULL DEFAULT ''`); } catch (_) {}
+  try { await pool.execute(`ALTER TABLE users DROP PRIMARY KEY, ADD PRIMARY KEY (id, guild_id)`); } catch (_) {}
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS schedules (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -96,9 +87,7 @@ async function getSchedules() {
 }
 
 async function deleteSchedule(id) {
-  const [result] = await pool.execute(`DELETE FROM schedules WHERE id = ?`, [
-    id,
-  ]);
+  const [result] = await pool.execute(`DELETE FROM schedules WHERE id = ?`, [id]);
   return result.affectedRows > 0;
 }
 

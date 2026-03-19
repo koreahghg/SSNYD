@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
-const { getUser, updateBalance, setField, getTopUsers } = require("./db");
+const { getUser, updateBalance, setField, getTopUsers } = require("../db");
 const { toMysqlDatetime, toKSTDateStr } = require("../utils");
 
 function cooldownLeft(lastTime, ms) {

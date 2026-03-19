@@ -15,13 +15,16 @@ const {
   isGambling,
 } = require("./games");
 
+const GAMBLING_CMDS = new Set(["!코인", "!블랙잭", "!바카라", "!룰렛"]);
+
 async function handleCasino(message) {
   const parts = message.content.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
   const args = parts.slice(1);
 
-  if (isGambling(message.author.id)) {
-    return message.reply("🎰 진행 중인 도박 게임이 있습니다. 게임이 끝난 후 이용해주세요.");
+  if (GAMBLING_CMDS.has(cmd) && isGambling(message.author.id)) {
+    message.reply("🎰 진행 중인 도박 게임이 있습니다. 게임이 끝난 후 이용해주세요.");
+    return true;
   }
 
   switch (cmd) {

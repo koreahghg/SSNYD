@@ -1,4 +1,4 @@
-const { addSchedule, getSchedules, deleteSchedule } = require("../casino/db");
+const { addSchedule, getSchedules, deleteSchedule } = require("../db");
 
 const pendingSetup = new Map();
 

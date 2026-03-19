@@ -4,7 +4,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { getUser, updateBalance } = require("./db");
+const { getUser, updateBalance } = require("../db");
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
