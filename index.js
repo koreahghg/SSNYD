@@ -3,7 +3,7 @@ const { handleCasino, handleButtonInteraction } = require("./casino/handler");
 const { handleMeal } = require("./meal/handler");
 const { handleScheduler, initScheduler } = require("./scheduler/handler");
 const { handleTimetable } = require("./timetable/handler");
-const { init: initDb } = require("./casino/db");
+const { init: initDb } = require("./db");
 const { handleRandom } = require("./random/handler");
 
 async function handleHelp(message) {
