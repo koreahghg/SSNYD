@@ -28,6 +28,7 @@ async function init() {
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS schedules (
       id INT AUTO_INCREMENT PRIMARY KEY,
+      guild_id VARCHAR(30) NOT NULL DEFAULT '',
       channel_id VARCHAR(30) NOT NULL,
       channel_name VARCHAR(100) NOT NULL,
       message TEXT NOT NULL,
@@ -35,6 +36,7 @@ async function init() {
       minute TINYINT NOT NULL
     )
   `);
+  try { await pool.execute(`ALTER TABLE schedules ADD COLUMN guild_id VARCHAR(30) NOT NULL DEFAULT '' AFTER id`); } catch (_) {}
 }
 
 async function getUser(guildId, id, username) {
@@ -73,22 +75,41 @@ async function getTopUsers(guildId, limit = 10) {
   return rows;
 }
 
-async function addSchedule(channelId, channelName, message, hour, minute) {
+async function addSchedule(guildId, channelId, channelName, message, hour, minute) {
   const [result] = await pool.execute(
-    `INSERT INTO schedules (channel_id, channel_name, message, hour, minute) VALUES (?, ?, ?, ?, ?)`,
-    [channelId, channelName, message, hour, minute],
+    `INSERT INTO schedules (guild_id, channel_id, channel_name, message, hour, minute) VALUES (?, ?, ?, ?, ?, ?)`,
+    [guildId, channelId, channelName, message, hour, minute],
   );
   return result.insertId;
 }
 
-async function getSchedules() {
+async function getAllSchedules() {
   const [rows] = await pool.execute(`SELECT * FROM schedules ORDER BY id`);
   return rows;
 }
 
-async function deleteSchedule(id) {
-  const [result] = await pool.execute(`DELETE FROM schedules WHERE id = ?`, [id]);
+async function getSchedules(guildId) {
+  const [rows] = await pool.execute(
+    `SELECT * FROM schedules WHERE guild_id = ? ORDER BY id`,
+    [guildId],
+  );
+  return rows;
+}
+
+async function deleteSchedule(id, guildId) {
+  const [result] = await pool.execute(
+    `DELETE FROM schedules WHERE id = ? AND guild_id = ?`,
+    [id, guildId],
+  );
   return result.affectedRows > 0;
+}
+
+async function deleteAllSchedules(guildId) {
+  const [result] = await pool.execute(
+    `DELETE FROM schedules WHERE guild_id = ?`,
+    [guildId],
+  );
+  return result.affectedRows;
 }
 
 module.exports = {
@@ -98,6 +119,8 @@ module.exports = {
   setField,
   getTopUsers,
   addSchedule,
+  getAllSchedules,
   getSchedules,
   deleteSchedule,
+  deleteAllSchedules,
 };

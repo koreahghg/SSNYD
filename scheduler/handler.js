@@ -1,4 +1,4 @@
-const { addSchedule, getSchedules, deleteSchedule } = require("../db");
+const { addSchedule, getAllSchedules, getSchedules, deleteSchedule, deleteAllSchedules } = require("../db");
 
 const pendingSetup = new Map();
 
@@ -8,7 +8,7 @@ function initScheduler(client) {
     const h = kst.getUTCHours();
     const min = kst.getUTCMinutes();
 
-    const schedules = await getSchedules();
+    const schedules = await getAllSchedules();
     for (const s of schedules) {
       if (h === s.hour && min === s.minute) {
         const channel = client.channels.cache.get(s.channel_id);
@@ -21,6 +21,7 @@ function initScheduler(client) {
 async function handleScheduler(message) {
   const content = message.content.trim();
   const userId = message.author.id;
+  const guildId = message.guild.id;
 
   if (pendingSetup.has(userId)) {
     const state = pendingSetup.get(userId);
@@ -57,7 +58,7 @@ async function handleScheduler(message) {
         message.reply("❌ 올바른 시간을 입력하세요. (00:00 ~ 23:59)");
         return true;
       }
-      await addSchedule(state.channelId, state.channelName, state.message, hour, minute);
+      await addSchedule(guildId, state.channelId, state.channelName, state.message, hour, minute);
       pendingSetup.delete(userId);
       const hh = String(hour).padStart(2, "0");
       const mm = String(minute).padStart(2, "0");
@@ -85,7 +86,7 @@ async function handleScheduler(message) {
   }
 
   if (content === "!알림목록") {
-    const schedules = await getSchedules();
+    const schedules = await getSchedules(guildId);
     if (schedules.length === 0) {
       message.reply("📭 등록된 알림이 없습니다.");
     } else {
@@ -101,12 +102,22 @@ async function handleScheduler(message) {
     return true;
   }
 
+  if (content === "!알림삭제전체") {
+    const count = await deleteAllSchedules(guildId);
+    if (count === 0) {
+      message.reply("📭 삭제할 알림이 없습니다.");
+    } else {
+      message.reply(`✅ 이 서버의 알림 **${count}개**를 모두 삭제했습니다.`);
+    }
+    return true;
+  }
+
   if (content.startsWith("!알림삭제")) {
     const num = parseInt(content.slice("!알림삭제".length).trim());
     if (isNaN(num)) {
       message.reply(`❌ 올바른 번호를 입력하세요. \`!알림목록\`으로 번호를 확인하세요.`);
     } else {
-      const deleted = await deleteSchedule(num);
+      const deleted = await deleteSchedule(num, guildId);
       if (deleted) {
         message.reply(`✅ ${num}번 알림을 삭제했습니다.`);
       } else {
