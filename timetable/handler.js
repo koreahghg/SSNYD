@@ -69,7 +69,7 @@ function fetchTimetable(dateStr, grade, classNum) {
             resolve(
               rows.map((r) => ({
                 period: parseInt(r.PERIO),
-                subject: r.ITRT_CNTNT,
+                subject: r.ITRT_CNTNT.trim(),
               })),
             );
           } catch (e) {
