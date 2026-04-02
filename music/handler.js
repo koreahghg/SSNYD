@@ -1,7 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const { searchTracks } = require("./spotify");
 
-
 function buildTrackEmbed(track, title, color) {
   const artists = track.artists.map((a) => a.name).join(", ");
   const albumArt = track.album?.images?.[0]?.url;
@@ -32,6 +31,89 @@ function buildTrackEmbed(track, title, color) {
   return embed;
 }
 
+const GENRE_ARTISTS = {
+  케이팝: [
+    "BTS",
+    "아이유",
+    "NewJeans",
+    "BLACKPINK",
+    "TWICE",
+    "aespa",
+    "빅뱅",
+    "레드벨벳",
+    "세븐틴",
+    "비투비",
+    "god",
+    "서태지와아이들",
+  ],
+  팝: [
+    "Taylor Swift",
+    "Ariana Grande",
+    "Bruno Mars",
+    "Billie Eilish",
+    "The Weeknd",
+    "maroon 5",
+  ],
+  제이팝: [
+    "그린애플",
+    "요네즈 켄시",
+    "아라시",
+    "우타다 히카루",
+    "RADWIMPS",
+    "Aimyon",
+    "King Gnu",
+    "YOASOBI",
+  ],
+  밴드: [
+    "검정치마",
+    "혁오",
+    "실리카겔",
+    "리도어",
+    "봉제인간",
+    "너드커넥션",
+    "wave to earth",
+    "놀이도감",
+    "손애플",
+  ],
+  힙합: [
+    "Travis Scott",
+    "빈지노",
+    "김하온",
+    "식케이",
+    "창모",
+    "저스디스",
+    "pH-1",
+    "다이나믹 듀오",
+    "재지팩트",
+    "머쉬베놈",
+    "이센스",
+    "제이통",
+    "코드 쿤스트",
+  ],
+  알앤비: [
+    "Frank Ocean",
+    "SZA",
+    "Daniel Caesar",
+    "H.E.R.",
+    "Bryson Tiller",
+    "The Weeknd",
+  ],
+  인디: [
+    "검정치마",
+    "잔나비",
+    "새소년",
+    "카더가든",
+    "10cm",
+    "한로로",
+    "리도어",
+    "wave to earth",
+    "허회경",
+    "백예린",
+  ],
+};
+
+const GENRE_LIST = Object.keys(GENRE_ARTISTS);
+
 const RECOMMEND_CMDS = ["!노추", "!노래", "!오노추"];
 
 async function handleMusic(message) {
@@ -41,15 +123,33 @@ async function handleMusic(message) {
     (cmd) => content === cmd || content.startsWith(cmd + " "),
   );
   if (recCmd) {
-    const RANDOM_QUERIES = [
-      "year:2024", "year:2023", "year:2022", "year:2025",
-      "pop hits", "k-pop", "hip-hop", "indie", "r&b", "rock",
-    ];
+    const input = content.slice(recCmd.length).trim();
+    const genreKey =
+      GENRE_LIST.find((g) => g === input) ||
+      (input === ""
+        ? GENRE_LIST[Math.floor(Math.random() * GENRE_LIST.length)]
+        : null);
+
+    if (input && !genreKey) {
+      const embed = new EmbedBuilder()
+        .setColor(0x1db954)
+        .setTitle("🎧 노래 추천")
+        .setDescription(
+          "장르를 입력하면 해당 장르의 노래를 추천해드립니다!\n\n**사용법:** `!노추 [장르]`",
+        )
+        .addFields({
+          name: "🎼 사용 가능한 장르",
+          value: GENRE_LIST.join(" / "),
+        });
+      message.reply({ embeds: [embed] });
+      return true;
+    }
 
     try {
-      const query = RANDOM_QUERIES[Math.floor(Math.random() * RANDOM_QUERIES.length)];
-      const offset = Math.floor(Math.random() * 10) * 10;
-      const data = await searchTracks(query, 10, offset);
+      const artists = GENRE_ARTISTS[genreKey];
+      const artist = artists[Math.floor(Math.random() * artists.length)];
+      const offset = Math.floor(Math.random() * 5) * 10;
+      const data = await searchTracks(`artist:${artist}`, 10, offset);
       const tracks = data.tracks?.items;
       if (!tracks || tracks.length === 0) {
         message.reply("😢 추천 곡을 찾지 못했습니다. 다시 시도해보세요.");
@@ -57,11 +157,14 @@ async function handleMusic(message) {
       }
 
       const picked = tracks[Math.floor(Math.random() * tracks.length)];
-      const embed = buildTrackEmbed(picked, "🎧 랜덤 추천 노래", 0x1db954);
+      const label = input ? genreKey : `${genreKey} (랜덤)`;
+      const embed = buildTrackEmbed(picked, `🎧 ${label} 추천 노래`, 0x1db954);
       message.reply({ embeds: [embed] });
     } catch (err) {
       console.error(err);
-      message.reply("❌ Spotify API 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      message.reply(
+        "❌ Spotify API 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      );
     }
     return true;
   }
@@ -83,7 +186,11 @@ async function handleMusic(message) {
 
       const unique = [...new Map(tracks.map((t) => [t.id, t])).values()];
       const picked = unique[Math.floor(Math.random() * unique.length)];
-      const embed = buildTrackEmbed(picked, `🔍 "${query}" 검색 결과`, 0x5865f2);
+      const embed = buildTrackEmbed(
+        picked,
+        `🔍 "${query}" 검색 결과`,
+        0x5865f2,
+      );
       message.reply({ embeds: [embed] });
     } catch (err) {
       console.error(err);
