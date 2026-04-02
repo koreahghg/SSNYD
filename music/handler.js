@@ -44,7 +44,7 @@ const GENRE_ARTISTS = {
     "세븐틴",
     "비투비",
     "god",
-    "서태지와아이들",
+    "서태지와 아이들",
   ],
   팝: [
     "Taylor Swift",
@@ -148,8 +148,7 @@ async function handleMusic(message) {
     try {
       const artists = GENRE_ARTISTS[genreKey];
       const artist = artists[Math.floor(Math.random() * artists.length)];
-      const offset = Math.floor(Math.random() * 5) * 10;
-      const data = await searchTracks(`artist:${artist}`, 10, offset);
+      const data = await searchTracks("artist:" + artist, 50, 0);
       const tracks = data.tracks?.items;
       if (!tracks || tracks.length === 0) {
         message.reply("😢 추천 곡을 찾지 못했습니다. 다시 시도해보세요.");
