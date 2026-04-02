@@ -12,6 +12,10 @@ function httpsPost(options, body) {
       let raw = "";
       res.on("data", (chunk) => (raw += chunk));
       res.on("end", () => {
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          reject(new Error("Spotify HTTP " + res.statusCode + ": " + raw.slice(0, 200)));
+          return;
+        }
         try { resolve(JSON.parse(raw)); }
         catch (e) { reject(e); }
       });
