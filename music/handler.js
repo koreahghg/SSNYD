@@ -1,5 +1,5 @@
-const { EmbedBuilder } = require("discord.js");
-const { searchTracks } = require("./spotify");
+import { EmbedBuilder } from "discord.js";
+import { searchTracks } from "./spotify.js";
 
 function buildTrackEmbed(track, title, color) {
   const artists = track.artists.map((a) => a.name).join(", ");
@@ -177,4 +177,4 @@ async function handleMusic(message) {
   return false;
 }
 
-module.exports = { handleMusic };
+export { handleMusic };

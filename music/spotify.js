@@ -1,4 +1,4 @@
-const https = require("https");
+import https from "https";
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
@@ -95,4 +95,4 @@ async function searchTracks(query, limit = 5, offset = 0) {
   return httpsGet(url, token);
 }
 
-module.exports = { searchTracks };
+export { searchTracks };
