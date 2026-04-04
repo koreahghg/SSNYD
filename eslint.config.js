@@ -30,4 +30,10 @@ export default [
       "no-useless-assignment": "warn",
     },
   },
+  {
+    files: ["eslint.config.js"],
+    rules: {
+      "n/no-unpublished-import": "off",
+    },
+  },
 ];
