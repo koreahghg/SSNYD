@@ -123,7 +123,7 @@ async function handleBaccaratButton(interaction) {
     delta = 0;
     await updateBalance(interaction.guildId, userId, amount);
   } else if (userWin) {
-    delta = Math.floor(amount * 0.95);
+    delta = side === "banker" ? Math.floor(amount * 0.95) : amount;
     await updateBalance(interaction.guildId, userId, amount + delta);
   } else {
     delta = -amount;
