@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 import https from "https";
-import { kstNow, toNeisDateStr, NEIS_KEY, ATPT_CODE, SCHOOL_CODE } from "../utils.js";
+import { kstNow, toNeisDateStr, fetchWithRetry, NEIS_KEY, ATPT_CODE, SCHOOL_CODE } from "../utils.js";
 
 const MEAL_LABELS = { 1: "조식", 2: "중식", 3: "석식" };
 
@@ -25,11 +25,14 @@ function fetchMeal(dateStr, mealType) {
     `&MLSV_YMD=${dateStr}` +
     `&MMEAL_SC_CODE=${mealType}`;
 
+  console.log(`[NEIS] 급식 요청 — ${dateStr} type=${mealType}`);
   return new Promise((resolve, reject) => {
     const req = https.get(url, (res) => {
+      console.log(`[NEIS] 급식 응답 — status=${res.statusCode}`);
       let raw = "";
       res.on("data", (chunk) => (raw += chunk));
       res.on("end", () => {
+        console.log(`[NEIS] 급식 raw (${raw.length}B) — ${raw.slice(0, 200)}`);
         try {
           const json = JSON.parse(raw);
           if (!json.mealServiceDietInfo) {
@@ -91,7 +94,7 @@ async function handleMeal(message) {
   } else return false;
 
   try {
-    const result = await fetchMeal(dateStr, mealType);
+    const result = await fetchWithRetry(() => fetchMeal(dateStr, mealType));
     if (result) {
       const month = parseInt(dateStr.slice(4, 6));
       const day = parseInt(dateStr.slice(6, 8));
@@ -105,12 +108,13 @@ async function handleMeal(message) {
       message.reply(`😢 ${dayLabel} ${MEAL_LABELS[mealType]} 급식 정보가 없습니다.`);
     }
   } catch (err) {
-    console.error(err);
+    console.error(`[NEIS] 급식 최종 실패 —`, err);
     const embed = new EmbedBuilder()
       .setColor(0xef4444)
       .setTitle("❌ 급식 정보 오류")
       .addFields(
         { name: "오류 유형", value: err.name || "Error", inline: true },
+        { name: "재시도", value: "2회 재시도 후 실패", inline: true },
         { name: "메시지", value: err.message || "알 수 없는 오류", inline: false },
       )
       .setTimestamp();

@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 import https from "https";
-import { kstNow, toNeisDateStr, NEIS_KEY, ATPT_CODE, SCHOOL_CODE } from "../utils.js";
+import { kstNow, toNeisDateStr, fetchWithRetry, NEIS_KEY, ATPT_CODE, SCHOOL_CODE } from "../utils.js";
 
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 const CLASS_COLORS = [0x3b82f6, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xef4444, 0xec4899];
@@ -43,11 +43,14 @@ function fetchTimetable(dateStr, grade, classNum) {
     `&GRADE=${grade}` +
     `&CLASS_NM=${classNum}`;
 
+  console.log(`[NEIS] 시간표 요청 — ${dateStr} grade=${grade} class=${classNum}`);
   return new Promise((resolve, reject) => {
     const req = https.get(url, (res) => {
+      console.log(`[NEIS] 시간표 응답 — status=${res.statusCode}`);
       let raw = "";
       res.on("data", (chunk) => (raw += chunk));
       res.on("end", () => {
+        console.log(`[NEIS] 시간표 raw (${raw.length}B) — ${raw.slice(0, 200)}`);
         try {
           const json = JSON.parse(raw);
           if (!json.hisTimetable) {
@@ -90,7 +93,7 @@ async function handleTimetable(message) {
   const day = target.getUTCDate();
 
   try {
-    const rows = await fetchTimetable(dateStr, grade, classNum);
+    const rows = await fetchWithRetry(() => fetchTimetable(dateStr, grade, classNum));
     if (!rows || rows.length === 0) {
       message.reply(`😢 ${month}월 ${day}일(${dayName}) 시간표 정보가 없습니다.`);
       return true;
@@ -113,12 +116,13 @@ async function handleTimetable(message) {
 
     message.reply({ embeds: [embed] });
   } catch (err) {
-    console.error(err);
+    console.error(`[NEIS] 시간표 최종 실패 —`, err);
     const embed = new EmbedBuilder()
       .setColor(0xef4444)
       .setTitle("❌ 시간표 정보 오류")
       .addFields(
         { name: "오류 유형", value: err.name || "Error", inline: true },
+        { name: "재시도", value: "2회 재시도 후 실패", inline: true },
         { name: "메시지", value: err.message || "알 수 없는 오류", inline: false },
       )
       .setTimestamp();
