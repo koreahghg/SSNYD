@@ -44,31 +44,31 @@ function fetchTimetable(dateStr, grade, classNum) {
     `&CLASS_NM=${classNum}`;
 
   return new Promise((resolve, reject) => {
-    https
-      .get(url, (res) => {
-        let raw = "";
-        res.on("data", (chunk) => (raw += chunk));
-        res.on("end", () => {
-          try {
-            const json = JSON.parse(raw);
-            if (!json.hisTimetable) {
-              resolve(null);
-              return;
-            }
-            const rows = json.hisTimetable[1].row;
-            rows.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
-            resolve(
-              rows.map((r) => ({
-                period: parseInt(r.PERIO),
-                subject: r.ITRT_CNTNT.trim(),
-              })),
-            );
-          } catch (e) {
-            reject(e);
+    const req = https.get(url, (res) => {
+      let raw = "";
+      res.on("data", (chunk) => (raw += chunk));
+      res.on("end", () => {
+        try {
+          const json = JSON.parse(raw);
+          if (!json.hisTimetable) {
+            resolve(null);
+            return;
           }
-        });
-      })
-      .on("error", reject);
+          const rows = json.hisTimetable[1].row;
+          rows.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+          resolve(
+            rows.map((r) => ({
+              period: parseInt(r.PERIO),
+              subject: r.ITRT_CNTNT.trim(),
+            })),
+          );
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    req.setTimeout(8000, () => req.destroy(new Error("NEIS API 요청 시간 초과")));
+    req.on("error", reject);
   });
 }
 
@@ -114,7 +114,15 @@ async function handleTimetable(message) {
     message.reply({ embeds: [embed] });
   } catch (err) {
     console.error(err);
-    message.reply("❌ 시간표 정보를 불러오는 중 오류가 발생했습니다.");
+    const embed = new EmbedBuilder()
+      .setColor(0xef4444)
+      .setTitle("❌ 시간표 정보 오류")
+      .addFields(
+        { name: "오류 유형", value: err.name || "Error", inline: true },
+        { name: "메시지", value: err.message || "알 수 없는 오류", inline: false },
+      )
+      .setTimestamp();
+    message.reply({ embeds: [embed] });
   }
 
   return true;
