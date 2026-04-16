@@ -39,4 +39,13 @@ async function fetchWithRetry(fn, maxRetries = 2) {
   throw lastErr;
 }
 
-export { kstNow, toMysqlDatetime, toKSTDateStr, toNeisDateStr, fetchWithRetry, NEIS_KEY, ATPT_CODE, SCHOOL_CODE };
+export {
+  kstNow,
+  toMysqlDatetime,
+  toKSTDateStr,
+  toNeisDateStr,
+  fetchWithRetry,
+  NEIS_KEY,
+  ATPT_CODE,
+  SCHOOL_CODE,
+};

@@ -1,6 +1,13 @@
 import { EmbedBuilder } from "discord.js";
 import https from "https";
-import { kstNow, toNeisDateStr, fetchWithRetry, NEIS_KEY, ATPT_CODE, SCHOOL_CODE } from "../utils.js";
+import {
+  kstNow,
+  toNeisDateStr,
+  fetchWithRetry,
+  NEIS_KEY,
+  ATPT_CODE,
+  SCHOOL_CODE,
+} from "../utils.js";
 
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 const CLASS_COLORS = [0x3b82f6, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xef4444, 0xec4899];

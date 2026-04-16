@@ -1,6 +1,13 @@
 import { EmbedBuilder } from "discord.js";
 import https from "https";
-import { kstNow, toNeisDateStr, fetchWithRetry, NEIS_KEY, ATPT_CODE, SCHOOL_CODE } from "../utils.js";
+import {
+  kstNow,
+  toNeisDateStr,
+  fetchWithRetry,
+  NEIS_KEY,
+  ATPT_CODE,
+  SCHOOL_CODE,
+} from "../utils.js";
 
 const MEAL_LABELS = { 1: "조식", 2: "중식", 3: "석식" };
 

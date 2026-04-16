@@ -50,15 +50,12 @@ async function handleStatus(message, client) {
     })(),
   ]);
 
-  const neisResult = neis.status === "fulfilled" ? neis.value : { ok: false, error: neis.reason?.message };
+  const neisResult =
+    neis.status === "fulfilled" ? neis.value : { ok: false, error: neis.reason?.message };
   const dbResult = db.status === "fulfilled" ? db.value : { ok: false, error: db.reason?.message };
 
-  const neisText = neisResult.ok
-    ? `✅ 정상 (${neisResult.ms}ms)`
-    : `❌ 오류 — ${neisResult.error}`;
-  const dbText = dbResult.ok
-    ? `✅ 정상 (${dbResult.ms}ms)`
-    : `❌ 오류 — ${dbResult.error}`;
+  const neisText = neisResult.ok ? `✅ 정상 (${neisResult.ms}ms)` : `❌ 오류 — ${neisResult.error}`;
+  const dbText = dbResult.ok ? `✅ 정상 (${dbResult.ms}ms)` : `❌ 오류 — ${dbResult.error}`;
 
   const allOk = neisResult.ok && dbResult.ok;
 
