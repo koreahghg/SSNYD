@@ -89,15 +89,27 @@ function fetchTimetable(dateStr, grade, classNum) {
 
 async function handleTimetable(message) {
   const cmd = message.content.trim();
-  if (cmd !== "!시간표" && cmd !== "!ㅅㄱㅍ") return false;
+  if (!cmd.startsWith("!시간표") && cmd !== "!ㅅㄱㅍ") return false;
 
-  const info = getClassFromRoles(message.member);
-  if (!info) {
-    message.reply("❌ 반 역할이 없습니다. (예: `1반`, `2-1`) 관리자에게 문의하세요.");
-    return true;
+  let grade, classNum;
+
+  const directMatch = cmd.match(/^!시간표\s*(\d)-(\d+)$/);
+  if (directMatch) {
+    grade = parseInt(directMatch[1]);
+    classNum = parseInt(directMatch[2]);
+    if (grade < 1 || grade > 3) {
+      message.reply("❌ 학년은 1~3 사이로 입력해줘! (예: `!시간표 2-3`)");
+      return true;
+    }
+  } else {
+    if (cmd !== "!시간표" && cmd !== "!ㅅㄱㅍ") return false;
+    const info = getClassFromRoles(message.member);
+    if (!info) {
+      message.reply("❌ 반 역할이 없습니다. (예: `1반`, `2-1`) 관리자에게 문의하세요.");
+      return true;
+    }
+    ({ grade, classNum } = info);
   }
-
-  const { grade, classNum } = info;
   const target = getTargetDate();
   const dateStr = toNeisDateStr(target);
   const dayName = DAY_NAMES[target.getUTCDay()];
