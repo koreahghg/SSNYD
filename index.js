@@ -31,10 +31,7 @@ async function handleHelp(message) {
       },
       {
         name: "🗓️ 학사일정",
-        value: [
-          "`!학사일정` — 이번 달 학사일정",
-          "`!학사일정 N월` — N월 학사일정",
-        ].join("\n"),
+        value: ["`!학사일정` — 이번 달 학사일정", "`!학사일정 N월` — N월 학사일정"].join("\n"),
       },
       {
         name: "💰 경제",
