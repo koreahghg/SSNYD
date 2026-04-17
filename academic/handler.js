@@ -85,7 +85,7 @@ async function handleAcademic(message) {
 
     const lines = [...byDay.entries()]
       .sort((a, b) => a[0] - b[0])
-      .map(([day, events]) => `**${day}일** ㅡ ${events.join(", ")}`);
+      .map(([day, events]) => `**${day}일** ㅡ ${[...events].join(", ")}`);
 
     const embed = new EmbedBuilder()
       .setColor(0x3b82f6)
