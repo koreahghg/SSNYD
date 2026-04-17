@@ -26,7 +26,10 @@ function fetchAcademicSchedule(year, month) {
       res.on("end", () => {
         try {
           const json = JSON.parse(raw);
-          if (json.RESULT) return resolve([]);
+          if (json.RESULT) {
+            if (json.RESULT.CODE === "INFO-200") return resolve([]);
+            return reject(new Error(`${json.RESULT.CODE}: ${json.RESULT.MESSAGE}`));
+          }
           resolve(json.SchoolSchedule?.[1]?.row ?? []);
         } catch (e) {
           reject(e);
