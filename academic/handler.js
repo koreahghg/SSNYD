@@ -79,8 +79,8 @@ async function handleAcademic(message) {
     const byDay = new Map();
     for (const row of rows) {
       const day = parseInt(row.AA_YMD.slice(6, 8), 10);
-      if (!byDay.has(day)) byDay.set(day, []);
-      byDay.get(day).push(row.EVENT_NM);
+      if (!byDay.has(day)) byDay.set(day, new Set());
+      byDay.get(day).add(row.EVENT_NM);
     }
 
     const lines = [...byDay.entries()]
