@@ -30,9 +30,7 @@ async function handleGamblingToggle(message, args) {
     const enable = subCmd === "on";
     await setGamblingEnabled(message.guild.id, enable);
     await message.reply(
-      enable
-        ? "✅ 도박 기능이 **활성화**되었습니다."
-        : "🔒 도박 기능이 **비활성화**되었습니다.",
+      enable ? "✅ 도박 기능이 **활성화**되었습니다." : "🔒 도박 기능이 **비활성화**되었습니다.",
     );
   } else {
     const enabled = await getGamblingEnabled(message.guild.id);
