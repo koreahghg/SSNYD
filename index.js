@@ -9,6 +9,7 @@ import { handleRandom } from "./random/handler.js";
 import { handleMusic } from "./music/handler.js";
 import { handleStatus } from "./status/handler.js";
 import { handleAcademic } from "./academic/handler.js";
+import { handleWeather } from "./weather/handler.js";
 import { sendBotStatus } from "./webhook.js";
 
 async function handleHelp(message) {
@@ -28,7 +29,10 @@ async function handleHelp(message) {
       },
       {
         name: "📅 시간표",
-        value: "`!시간표` — 오늘(또는 다음 날) 시간표",
+        value: [
+          "`!시간표` / `!ㅅㄱㅍ` — 내 반 시간표 (역할 필요)",
+          "`!시간표 N-M` / `!ㅅㄱㅍ N-M` — N학년 M반 시간표 (역할 불필요)",
+        ].join("\n"),
       },
       {
         name: "🗓️ 학사일정",
@@ -62,6 +66,14 @@ async function handleHelp(message) {
           "`!노추 [장르]` — 장르별 노래 추천 (케이팝, 팝, 록, 힙합 등)",
           "`!가수 [키워드]` — 노래/아티스트 검색",
         ].join("\n"),
+      },
+      {
+        name: "🌤️ 날씨",
+        value: "`!날씨` / `!ㄴㅆ` — 현재 날씨 및 미세먼지",
+      },
+      {
+        name: "🤖 봇 상태",
+        value: "`!상태` — 봇 업타임, 핑, 메모리, API 상태 확인",
       },
       {
         name: "🔔 알림",
@@ -122,6 +134,7 @@ client.on(Events.MessageCreate, async (message) => {
   if (await handleScheduler(message)) return;
   if (await handleTimetable(message)) return;
   if (await handleAcademic(message)) return;
+  if (await handleWeather(message)) return;
   await handleMeal(message);
 });
 
