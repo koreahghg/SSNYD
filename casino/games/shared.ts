@@ -1,9 +1,14 @@
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+export const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
-function parseBet(arg, balance) {
+export interface BetResult {
+  error?: string;
+  amount?: number;
+}
+
+export function parseBet(arg: string | undefined, balance: number): BetResult {
   if (!arg) return { error: "❌ 베팅 금액을 입력하세요." };
   const lower = arg.toLowerCase();
-  let amount;
+  let amount: number;
   if (lower === "올인" || lower === "all") {
     amount = balance;
   } else if (lower === "반" || lower === "half") {
@@ -17,21 +22,26 @@ function parseBet(arg, balance) {
   return { amount };
 }
 
-function fmt(n) {
+export function fmt(n: number): string {
   return (n >= 0 ? "+" : "") + n.toLocaleString() + "원";
 }
 
-const activeGamblers = new Set();
+export const activeGamblers = new Set<string>();
 
-function isGambling(userId) {
+export function isGambling(userId: string): boolean {
   return activeGamblers.has(userId);
 }
 
-const SUITS = ["♠", "♥", "♦", "♣"];
-const VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+export const SUITS = ["♠", "♥", "♦", "♣"];
+export const VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
-function createDeck() {
-  const deck = [];
+export interface Card {
+  s: string;
+  v: string;
+}
+
+export function createDeck(): Card[] {
+  const deck: Card[] = [];
   for (const s of SUITS) for (const v of VALUES) deck.push({ s, v });
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -39,5 +49,3 @@ function createDeck() {
   }
   return deck;
 }
-
-export { sleep, parseBet, fmt, activeGamblers, isGambling, SUITS, VALUES, createDeck };
