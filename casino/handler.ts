@@ -58,13 +58,7 @@ export async function handleCasino(message: Message): Promise<boolean> {
   const cmd = parts[0].toLowerCase();
   const args = parts.slice(1);
 
-  const ALL_CASINO_CMDS = new Set([
-    ...GAMBLING_CMDS,
-    "!도박",
-    "!잔액",
-    "!랭킹",
-    "!송금",
-  ]);
+  const ALL_CASINO_CMDS = new Set([...GAMBLING_CMDS, "!도박", "!잔액", "!랭킹", "!송금"]);
 
   if (!message.guild) {
     if (ALL_CASINO_CMDS.has(cmd)) {
