@@ -1,6 +1,6 @@
 # 🤖 SSNYD — 섹시노예들 디스코드 봇
 
-> 학교 생활을 더 편하고 재미있게 만들어주는 GAM 디스코드 봇
+> 학교 생활을 더 편하고 재미있게 만들어주는 GSM 디스코드 봇
 
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2)](https://discord.js.org/)
