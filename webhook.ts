@@ -14,11 +14,11 @@ const BOT_ENV = (() => {
   return "💻 Local";
 })();
 
-function getKSTString() {
+function getKSTString(): string {
   return new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
 }
 
-export async function sendBotStatus(type) {
+export async function sendBotStatus(type: "online" | "offline"): Promise<void> {
   if (!WEBHOOK_URL) return;
 
   const isOnline = type === "online";
@@ -37,7 +37,7 @@ export async function sendBotStatus(type) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ embeds: [embed] }),
     signal: AbortSignal.timeout(5000),
-  }).catch((err) => {
+  }).catch((err: Error) => {
     console.error("웹훅 전송 실패:", err.message);
   });
 }
