@@ -36,7 +36,7 @@
 ```
 SSNYD/
 ├── index.js              # 봇 진입점 — 이벤트 라우팅
-├── db.js                 # MySQL 커넥션 풀 관리
+├── db.js                 # MariaDB 커넥션 풀 관리
 ├── utils.js              # KST 시간, NEIS API 상수
 ├── webhook.js            # 봇 시작/종료 웹훅 알림
 │
@@ -140,7 +140,7 @@ SSNYD/
 
 - **런타임**: Node.js ≥ 18.0.0
 - **디스코드 라이브러리**: discord.js v14
-- **데이터베이스**: MySQL 2 (커넥션 풀)
+- **데이터베이스**: MariaDB (커넥션 풀)
 - **외부 API**:
   - 🏫 [NEIS API](https://open.neis.go.kr/) — 급식, 시간표, 학사일정
   - 🎵 [Spotify Web API](https://developer.spotify.com/) — 음악 추천 및 검색
