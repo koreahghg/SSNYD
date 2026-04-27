@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Client, Events, GatewayIntentBits, EmbedBuilder } from "discord.js";
+import { Client, Events, GatewayIntentBits, EmbedBuilder, Message, ButtonInteraction } from "discord.js";
 import { handleCasino, handleButtonInteraction } from "./casino/handler.js";
 import { handleMeal } from "./meal/handler.js";
 import { handleScheduler, initScheduler } from "./scheduler/handler.js";
@@ -12,7 +12,7 @@ import { handleAcademic } from "./academic/handler.js";
 import { handleWeather } from "./weather/handler.js";
 import { sendBotStatus } from "./webhook.js";
 
-async function handleHelp(message) {
+async function handleHelp(message: Message): Promise<boolean> {
   if (message.content.trim() !== "!명령어") return false;
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
@@ -107,11 +107,11 @@ client.once(Events.ClientReady, async (readyClient) => {
     initScheduler(readyClient);
     await sendBotStatus("online");
   } catch (e) {
-    console.error("DB 연결 실패:", e.message);
+    console.error("DB 연결 실패:", (e as Error).message);
   }
 });
 
-async function shutdown() {
+async function shutdown(): Promise<void> {
   await sendBotStatus("offline");
   process.exit(0);
 }
@@ -121,7 +121,7 @@ process.on("SIGTERM", shutdown);
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isButton()) return;
-  await handleButtonInteraction(interaction);
+  await handleButtonInteraction(interaction as ButtonInteraction);
 });
 
 client.on(Events.MessageCreate, async (message) => {
