@@ -1,9 +1,15 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, Message, Client } from "discord.js";
 import https from "https";
 import { kstNow, toNeisDateStr, NEIS_KEY, ATPT_CODE, SCHOOL_CODE } from "../utils.js";
 import { ping as dbPing } from "../db.js";
 
-function checkNeis() {
+interface ApiStatus {
+  ok: boolean;
+  ms?: number | null;
+  error?: string;
+}
+
+function checkNeis(): Promise<ApiStatus> {
   const dateStr = toNeisDateStr(kstNow());
   const url =
     `https://open.neis.go.kr/hub/mealServiceDietInfo` +
@@ -27,13 +33,13 @@ function checkNeis() {
       req.destroy();
       resolve({ ok: false, ms: null, error: "timeout (5s 초과)" });
     });
-    req.on("error", (err) => {
+    req.on("error", (err: Error) => {
       resolve({ ok: false, ms: null, error: err.message });
     });
   });
 }
 
-async function handleStatus(message, client) {
+export async function handleStatus(message: Message, client: Client): Promise<boolean> {
   if (message.content.trim() !== "!상태") return false;
 
   const uptimeSec = Math.floor((client.uptime ?? 0) / 1000);
@@ -47,16 +53,16 @@ async function handleStatus(message, client) {
 
   const [neis, db] = await Promise.allSettled([
     checkNeis(),
-    (async () => {
-      const start = Date.now();
+    (async (): Promise<ApiStatus> => {
       const ms = await dbPing();
       return { ok: true, ms };
     })(),
   ]);
 
-  const neisResult =
-    neis.status === "fulfilled" ? neis.value : { ok: false, error: neis.reason?.message };
-  const dbResult = db.status === "fulfilled" ? db.value : { ok: false, error: db.reason?.message };
+  const neisResult: ApiStatus =
+    neis.status === "fulfilled" ? neis.value : { ok: false, error: (neis.reason as Error)?.message };
+  const dbResult: ApiStatus =
+    db.status === "fulfilled" ? db.value : { ok: false, error: (db.reason as Error)?.message };
 
   const neisText = neisResult.ok ? `✅ 정상 (${neisResult.ms}ms)` : `❌ 오류 — ${neisResult.error}`;
   const dbText = dbResult.ok ? `✅ 정상 (${dbResult.ms}ms)` : `❌ 오류 — ${dbResult.error}`;
@@ -78,5 +84,3 @@ async function handleStatus(message, client) {
   message.reply({ embeds: [embed] });
   return true;
 }
-
-export { handleStatus };
