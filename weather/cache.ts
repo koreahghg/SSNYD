@@ -8,14 +8,23 @@ const NY = process.env.WEATHER_NY ?? "74";
 const AIR_STATION = process.env.AIR_STATION ?? "광산구";
 const CACHE_TTL = 10 * 60 * 1000;
 
-let cached = null;
+export interface WeatherData {
+  temp: number;
+  feels_like: number;
+  status: string;
+  temp_max: number;
+  temp_min: number;
+  dust: string;
+}
+
+let cached: WeatherData | null = null;
 let cachedAt = 0;
 
-function fetchJson(url) {
+function fetchJson(url: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const req = https.get(url, (res) => {
       let raw = "";
-      res.on("data", (c) => (raw += c));
+      res.on("data", (c: string) => (raw += c));
       res.on("end", () => {
         if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
         try {
@@ -31,7 +40,7 @@ function fetchJson(url) {
 }
 
 // 초단기실황: 매시각 :40 이후 발표
-function ultraSrtBase(kst) {
+function ultraSrtBase(kst: Date): { base_date: string; base_time: string } {
   const y = kst.getUTCFullYear();
   const mo = String(kst.getUTCMonth() + 1).padStart(2, "0");
   const d = String(kst.getUTCDate()).padStart(2, "0");
@@ -52,7 +61,7 @@ function ultraSrtBase(kst) {
 }
 
 // 단기예보: 02, 05, 08, 11, 14, 17, 20, 23시 발표
-function shortFcstBase(kst) {
+function shortFcstBase(kst: Date): { base_date: string; base_time: string } {
   const TIMES = [2, 5, 8, 11, 14, 17, 20, 23];
   const y = kst.getUTCFullYear();
   const mo = String(kst.getUTCMonth() + 1).padStart(2, "0");
@@ -74,7 +83,7 @@ function shortFcstBase(kst) {
   return { base_date: `${y}${mo}${d}`, base_time: String(baseHour).padStart(2, "0") + "00" };
 }
 
-function toStatus(sky, pty) {
+function toStatus(sky: number, pty: number): string {
   if (pty === 1 || pty === 4 || pty === 5) return "비";
   if (pty === 2 || pty === 6) return "비";
   if (pty === 3 || pty === 7) return "눈";
@@ -84,7 +93,7 @@ function toStatus(sky, pty) {
 }
 
 // 풍속한냉지수 (T <= 10°C, V >= 4.8 km/h) / 간이 열지수 (T >= 27°C)
-function calcFeelsLike(temp, windMs, humidity) {
+function calcFeelsLike(temp: number, windMs: number, humidity: number): number {
   const v = windMs * 3.6;
   if (temp <= 10 && v >= 4.8) {
     return Math.round(
@@ -99,14 +108,14 @@ function calcFeelsLike(temp, windMs, humidity) {
   return temp;
 }
 
-function toDustLevel(pm10) {
+function toDustLevel(pm10: number): string {
   if (pm10 <= 30) return "좋음";
   if (pm10 <= 80) return "보통";
   if (pm10 <= 150) return "나쁨";
   return "매우나쁨";
 }
 
-export async function getWeatherData() {
+export async function getWeatherData(): Promise<WeatherData> {
   if (cached && Date.now() - cachedAt < CACHE_TTL) return cached;
   if (!KMA_KEY) throw new Error("KMA_API_KEY 환경변수 없음");
   if (!AIR_KEY) throw new Error("AIR_API_KEY 환경변수 없음");
@@ -143,21 +152,23 @@ export async function getWeatherData() {
     throw new Error(`에어코리아 오류: ${air?.response?.header?.resultMsg ?? "Unknown"}`);
 
   // 초단기실황
-  const ncstItems = ncst.response.body.items?.item ?? [];
-  const obs = (cat) => ncstItems.find((i) => i.category === cat)?.obsrValue;
-  const temp = Math.round(parseFloat(obs("T1H") ?? 0));
-  const wsd = parseFloat(obs("WSD") ?? 0);
-  const reh = parseFloat(obs("REH") ?? 50);
-  const ptyNow = parseInt(obs("PTY") ?? 0);
+  const ncstItems: any[] = ncst.response.body.items?.item ?? [];
+  const obs = (cat: string): string | undefined =>
+    ncstItems.find((i) => i.category === cat)?.obsrValue;
+  const temp = Math.round(parseFloat(obs("T1H") ?? "0"));
+  const wsd = parseFloat(obs("WSD") ?? "0");
+  const reh = parseFloat(obs("REH") ?? "50");
+  const ptyNow = parseInt(obs("PTY") ?? "0");
 
   // 단기예보
-  const fcstItems = fcst.response.body.items?.item ?? [];
-  const fv = (cat) =>
-    fcstItems.find((i) => i.category === cat && i.fcstDate === todayStr && i.fcstTime >= curHourStr)
-      ?.fcstValue;
+  const fcstItems: any[] = fcst.response.body.items?.item ?? [];
+  const fv = (cat: string): string | undefined =>
+    fcstItems.find(
+      (i) => i.category === cat && i.fcstDate === todayStr && i.fcstTime >= curHourStr,
+    )?.fcstValue;
 
-  const sky = parseInt(fv("SKY") ?? 1);
-  const ptyFcst = parseInt(fv("PTY") ?? ptyNow);
+  const sky = parseInt(fv("SKY") ?? "1");
+  const ptyFcst = parseInt(fv("PTY") ?? String(ptyNow));
 
   const tmxItem = fcstItems.find((i) => i.category === "TMX" && i.fcstDate === todayStr);
   const tmnToday = fcstItems.find((i) => i.category === "TMN" && i.fcstDate === todayStr);
@@ -176,7 +187,7 @@ export async function getWeatherData() {
 
   // 에어코리아 PM10
   const airItem = air.response.body.items?.[0];
-  const pm10Raw = parseFloat(airItem?.pm10Value ?? airItem?.pm10Value24 ?? 50);
+  const pm10Raw = parseFloat(airItem?.pm10Value ?? airItem?.pm10Value24 ?? "50");
 
   cached = {
     temp,
