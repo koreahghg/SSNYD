@@ -1,7 +1,7 @@
-import { EmbedBuilder } from "discord.js";
-import { searchTracks } from "./spotify.js";
+import { EmbedBuilder, Message } from "discord.js";
+import { searchTracks, SpotifyTrack } from "./spotify.js";
 
-function buildTrackEmbed(track, title, color) {
+function buildTrackEmbed(track: SpotifyTrack, title: string, color: number): EmbedBuilder {
   const artists = track.artists.map((a) => a.name).join(", ");
   const albumArt = track.album?.images?.[0]?.url;
   const spotifyUrl = track.external_urls?.spotify;
@@ -31,7 +31,7 @@ function buildTrackEmbed(track, title, color) {
   return embed;
 }
 
-const GENRE_ARTISTS = {
+const GENRE_ARTISTS: Record<string, string[]> = {
   케이팝: [
     "BTS",
     "아이유",
@@ -100,9 +100,9 @@ const GENRE_ARTISTS = {
 
 const GENRE_LIST = Object.keys(GENRE_ARTISTS);
 
-const RECOMMEND_CMDS = ["!노추", "!노래", "!오노추"];
+const RECOMMEND_CMDS = ["!노추", "!노래", "!오노추"] as const;
 
-async function handleMusic(message) {
+export async function handleMusic(message: Message): Promise<boolean> {
   const content = message.content.trim();
 
   const recCmd = RECOMMEND_CMDS.find((cmd) => content === cmd || content.startsWith(cmd + " "));
@@ -128,7 +128,7 @@ async function handleMusic(message) {
     }
 
     try {
-      const artists = GENRE_ARTISTS[genreKey];
+      const artists = GENRE_ARTISTS[genreKey!];
       const artist = artists[Math.floor(Math.random() * artists.length)];
       const data = await searchTracks(`artist:"${artist}"`, 10, 0);
       const tracks = data.tracks?.items;
@@ -176,5 +176,3 @@ async function handleMusic(message) {
 
   return false;
 }
-
-export { handleMusic };
