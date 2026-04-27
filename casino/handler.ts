@@ -1,4 +1,4 @@
-import { PermissionFlagsBits } from "discord.js";
+import { PermissionFlagsBits, Message, ButtonInteraction } from "discord.js";
 import {
   handleAttendance,
   handleWork,
@@ -28,7 +28,7 @@ const GAMBLING_CMDS = new Set([
   "!지원금",
 ]);
 
-async function handleGamblingToggle(message, args) {
+async function handleGamblingToggle(message: Message, args: string[]): Promise<void> {
   if (!message.guild) {
     await message.reply("❌ 이 명령어는 서버에서만 사용할 수 있습니다.");
     return;
@@ -36,7 +36,7 @@ async function handleGamblingToggle(message, args) {
   const subCmd = args[0]?.toLowerCase() || "";
 
   if (subCmd === "on" || subCmd === "off") {
-    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+    if (!message.member!.permissions.has(PermissionFlagsBits.Administrator)) {
       await message.reply("❌ 서버 관리자 권한이 필요합니다.");
       return;
     }
@@ -53,7 +53,7 @@ async function handleGamblingToggle(message, args) {
   }
 }
 
-async function handleCasino(message) {
+export async function handleCasino(message: Message): Promise<boolean> {
   const parts = message.content.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
   const args = parts.slice(1);
@@ -109,4 +109,4 @@ async function handleCasino(message) {
   }
 }
 
-export { handleCasino, handleButtonInteraction };
+export { handleButtonInteraction };
