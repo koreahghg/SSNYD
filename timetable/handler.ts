@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, Message } from "discord.js";
 import https from "https";
 import {
   kstNow,
@@ -12,7 +12,17 @@ import {
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 const CLASS_COLORS = [0x3b82f6, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xef4444, 0xec4899];
 
-function getClassFromRoles(member) {
+interface ClassInfo {
+  grade: number;
+  classNum: number;
+}
+
+interface TimetableRow {
+  period: number;
+  subject: string;
+}
+
+function getClassFromRoles(member: NonNullable<Message["member"]>): ClassInfo | null {
   for (const role of member.roles.cache.values()) {
     const simpleMatch = role.name.match(/^(\d+)반$/);
     if (simpleMatch) return { grade: 2, classNum: parseInt(simpleMatch[1]) };
@@ -27,7 +37,7 @@ function getClassFromRoles(member) {
   return null;
 }
 
-function getTargetDate() {
+function getTargetDate(): Date {
   const kst = kstNow();
   const t = kst.getUTCHours() * 60 + kst.getUTCMinutes();
 
@@ -40,7 +50,7 @@ function getTargetDate() {
   return target;
 }
 
-function fetchTimetable(dateStr, grade, classNum) {
+function fetchTimetable(dateStr: string, grade: number, classNum: number): Promise<TimetableRow[] | null> {
   const url =
     `https://open.neis.go.kr/hub/hisTimetable` +
     `?KEY=${NEIS_KEY}&Type=json&pIndex=1&pSize=100` +
@@ -60,7 +70,7 @@ function fetchTimetable(dateStr, grade, classNum) {
         return;
       }
       let raw = "";
-      res.on("data", (chunk) => (raw += chunk));
+      res.on("data", (chunk: string) => (raw += chunk));
       res.on("end", () => {
         console.log(`[NEIS] 시간표 raw (${raw.length}B) — ${raw.slice(0, 200)}`);
         try {
@@ -70,9 +80,9 @@ function fetchTimetable(dateStr, grade, classNum) {
             return;
           }
           const rows = json.hisTimetable[1].row;
-          rows.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+          rows.sort((a: any, b: any) => parseInt(a.PERIO) - parseInt(b.PERIO));
           resolve(
-            rows.map((r) => ({
+            rows.map((r: any) => ({
               period: parseInt(r.PERIO),
               subject: r.ITRT_CNTNT.trim(),
             })),
@@ -87,12 +97,12 @@ function fetchTimetable(dateStr, grade, classNum) {
   });
 }
 
-async function handleTimetable(message) {
+export async function handleTimetable(message: Message): Promise<boolean> {
   const cmd = message.content.trim();
   const match = cmd.match(/^!(?:시간표|ㅅㄱㅍ)\s*(?:(\d)-(\d+))?$/);
   if (!match) return false;
 
-  let grade, classNum;
+  let grade: number, classNum: number;
 
   if (match[1] && match[2]) {
     grade = parseInt(match[1]);
@@ -102,7 +112,7 @@ async function handleTimetable(message) {
       return true;
     }
   } else {
-    const info = getClassFromRoles(message.member);
+    const info = getClassFromRoles(message.member!);
     if (!info) {
       message.reply("❌ 반 역할이 없습니다. (예: `1반`, `2-1`) 관리자에게 문의하세요.");
       return true;
@@ -122,7 +132,7 @@ async function handleTimetable(message) {
       return true;
     }
 
-    const seen = new Set();
+    const seen = new Set<string>();
     const deduped = rows.filter((r) => {
       const key = `${r.period}:${r.subject}`;
       if (seen.has(key)) return false;
@@ -140,13 +150,14 @@ async function handleTimetable(message) {
     message.reply({ embeds: [embed] });
   } catch (err) {
     console.error(`[NEIS] 시간표 최종 실패 —`, err);
+    const error = err as Error;
     const embed = new EmbedBuilder()
       .setColor(0xef4444)
       .setTitle("❌ 시간표 정보 오류")
       .addFields(
-        { name: "오류 유형", value: err.name || "Error", inline: true },
+        { name: "오류 유형", value: error.name || "Error", inline: true },
         { name: "재시도", value: "2회 재시도 후 실패", inline: true },
-        { name: "메시지", value: err.message || "알 수 없는 오류", inline: false },
+        { name: "메시지", value: error.message || "알 수 없는 오류", inline: false },
       )
       .setTimestamp();
     message.reply({ embeds: [embed] });
@@ -154,5 +165,3 @@ async function handleTimetable(message) {
 
   return true;
 }
-
-export { handleTimetable };
