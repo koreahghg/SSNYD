@@ -1,8 +1,13 @@
 import https from "https";
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, Message } from "discord.js";
 import { kstNow, NEIS_KEY, ATPT_CODE, SCHOOL_CODE, fetchWithRetry } from "../utils.js";
 
-function fetchAcademicSchedule(year, month) {
+interface ScheduleRow {
+  AA_YMD: string;
+  EVENT_NM: string;
+}
+
+function fetchAcademicSchedule(year: number, month: number): Promise<ScheduleRow[]> {
   const mm = String(month).padStart(2, "0");
   const lastDay = new Date(year, month, 0).getDate();
   const fromDate = `${year}${mm}01`;
@@ -22,7 +27,7 @@ function fetchAcademicSchedule(year, month) {
         return reject(new Error(`HTTP ${res.statusCode}`));
       }
       let raw = "";
-      res.on("data", (chunk) => (raw += chunk));
+      res.on("data", (chunk: string) => (raw += chunk));
       res.on("end", () => {
         try {
           const json = JSON.parse(raw);
@@ -41,7 +46,7 @@ function fetchAcademicSchedule(year, month) {
   });
 }
 
-async function handleAcademic(message) {
+export async function handleAcademic(message: Message): Promise<boolean> {
   const content = message.content.trim();
   if (!content.startsWith("!학사일정")) return false;
 
@@ -76,11 +81,11 @@ async function handleAcademic(message) {
       return true;
     }
 
-    const byDay = new Map();
+    const byDay = new Map<number, Set<string>>();
     for (const row of rows) {
       const day = parseInt(row.AA_YMD.slice(6, 8), 10);
       if (!byDay.has(day)) byDay.set(day, new Set());
-      byDay.get(day).add(row.EVENT_NM);
+      byDay.get(day)!.add(row.EVENT_NM);
     }
 
     const lines = [...byDay.entries()]
@@ -100,11 +105,9 @@ async function handleAcademic(message) {
       .setColor(0xef4444)
       .setTitle("❌ 오류 발생")
       .setDescription("학사일정을 불러오는 중 오류가 발생했어!")
-      .setFooter({ text: err.message });
+      .setFooter({ text: (err as Error).message });
     await message.reply({ embeds: [embed] });
   }
 
   return true;
 }
-
-export { handleAcademic };
