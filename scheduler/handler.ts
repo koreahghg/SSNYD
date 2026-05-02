@@ -18,17 +18,32 @@ interface PendingState {
 
 const pendingSetup = new Map<string, PendingState>();
 
+function pendingKey(userId: string, guildId: string): string {
+  return `${userId}:${guildId}`;
+}
+
 export function initScheduler(client: Client): void {
   setInterval(async () => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const h = kst.getUTCHours();
     const min = kst.getUTCMinutes();
 
-    const schedules = await getAllSchedules();
+    let schedules;
+    try {
+      schedules = await getAllSchedules();
+    } catch (e) {
+      console.error("스케줄 조회 실패:", (e as Error).message);
+      return;
+    }
+
     for (const s of schedules) {
       if (h === s.hour && min === s.minute) {
         const channel = client.channels.cache.get(s.channel_id);
-        if (channel) (channel as TextChannel).send(`# ${s.message}`);
+        if (channel) {
+          (channel as TextChannel).send(s.message).catch((e: Error) => {
+            console.error(`메시지 전송 실패 (채널 ${s.channel_id}):`, e.message);
+          });
+        }
       }
     }
   }, 60 * 1000);
@@ -38,9 +53,20 @@ export async function handleScheduler(message: Message): Promise<boolean> {
   const content = message.content.trim();
   const userId = message.author.id;
   const guildId = message.guild!.id;
+  const key = pendingKey(userId, guildId);
 
-  if (pendingSetup.has(userId)) {
-    const state = pendingSetup.get(userId)!;
+  if (content === "!보내기취소") {
+    if (pendingSetup.has(key)) {
+      pendingSetup.delete(key);
+      message.reply("✅ 설정을 취소했습니다.");
+    } else {
+      message.reply("❌ 진행 중인 설정이 없습니다.");
+    }
+    return true;
+  }
+
+  if (pendingSetup.has(key)) {
+    const state = pendingSetup.get(key)!;
 
     if (state.step === "channel") {
       const mentioned = message.mentions.channels.first();
@@ -82,7 +108,7 @@ export async function handleScheduler(message: Message): Promise<boolean> {
         hour,
         minute,
       );
-      pendingSetup.delete(userId);
+      pendingSetup.delete(key);
       const hh = String(hour).padStart(2, "0");
       const mm = String(minute).padStart(2, "0");
       message.reply(
@@ -93,18 +119,8 @@ export async function handleScheduler(message: Message): Promise<boolean> {
   }
 
   if (content === "!보내기") {
-    pendingSetup.set(userId, { step: "channel" });
+    pendingSetup.set(key, { step: "channel" });
     message.reply("📌 어떤 채널에 보낼까요? 채널을 멘션해주세요. 예: `#일반`");
-    return true;
-  }
-
-  if (content === "!보내기취소") {
-    if (pendingSetup.has(userId)) {
-      pendingSetup.delete(userId);
-      message.reply("✅ 설정을 취소했습니다.");
-    } else {
-      message.reply("❌ 진행 중인 설정이 없습니다.");
-    }
     return true;
   }
 
