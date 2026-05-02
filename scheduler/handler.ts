@@ -50,9 +50,11 @@ export function initScheduler(client: Client): void {
 }
 
 export async function handleScheduler(message: Message): Promise<boolean> {
+  if (!message.guild) return false;
+
   const content = message.content.trim();
   const userId = message.author.id;
-  const guildId = message.guild!.id;
+  const guildId = message.guild.id;
   const key = pendingKey(userId, guildId);
 
   if (content === "!보내기취소") {
