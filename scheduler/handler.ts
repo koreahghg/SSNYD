@@ -23,10 +23,16 @@ function pendingKey(userId: string, guildId: string): string {
 }
 
 export function initScheduler(client: Client): void {
+  let lastFiredMinute = -1;
+
   setInterval(async () => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const h = kst.getUTCHours();
     const min = kst.getUTCMinutes();
+    const minuteKey = h * 60 + min;
+
+    if (minuteKey === lastFiredMinute) return;
+    lastFiredMinute = minuteKey;
 
     let schedules;
     try {
@@ -46,7 +52,7 @@ export function initScheduler(client: Client): void {
         }
       }
     }
-  }, 60 * 1000);
+  }, 30 * 1000);
 }
 
 export async function handleScheduler(message: Message): Promise<boolean> {
