@@ -45,7 +45,7 @@ export function initScheduler(client: Client): void {
     for (const s of schedules) {
       if (h === s.hour && min === s.minute) {
         const channel = client.channels.cache.get(s.channel_id);
-        if (channel) {
+        if (channel?.isTextBased()) {
           (channel as TextChannel).send(s.message).catch((e: Error) => {
             console.error(`메시지 전송 실패 (채널 ${s.channel_id}):`, e.message);
           });
